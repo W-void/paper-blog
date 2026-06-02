@@ -2,14 +2,10 @@ import {themes as prismThemes} from 'prism-react-renderer';
 import type {Config} from '@docusaurus/types';
 import type * as Preset from '@docusaurus/preset-classic';
 
-// This runs in Node.js - Don't use client-side code here (browser APIs, JSX...)
-
 const config: Config = {
-  title: '论文精读笔记',
-  tagline: '推荐系统 · LLM · 自监督学习 · AI 科研自动化',
+  title: 'W-void 的技术笔记',
+  tagline: '论文精读 · 公众号 · arXiv 日报',
   favicon: 'img/favicon.ico',
-
-  // future: { v4: true }, // Rspack native binding 在本地可能不兼容，CI 环境可按需开启
 
   url: 'https://w-void.github.io',
   baseUrl: '/paper-blog/',
@@ -36,10 +32,13 @@ const config: Config = {
       'classic',
       {
         docs: false,
+        // preset 自带的 blog 插件用于「最近精读」，挂在根路径
         blog: {
-          routeBasePath: '/',
+          id: 'papers',
+          path: 'blog-papers',
+          routeBasePath: 'papers',
           showReadingTime: true,
-          blogTitle: '论文精读笔记',
+          blogTitle: '最近精读',
           blogDescription: '推荐系统、LLM、自监督学习、AI 科研自动化方向的论文精读记录',
           postsPerPage: 10,
           blogSidebarTitle: '最近精读',
@@ -47,8 +46,7 @@ const config: Config = {
           feedOptions: {
             type: ['rss', 'atom'],
             xslt: true,
-            title: '论文精读笔记',
-            description: '推荐系统、LLM、自监督学习、AI 科研自动化方向的论文精读记录',
+            title: '最近精读',
           },
           onInlineTags: 'warn',
           onInlineAuthors: 'warn',
@@ -61,6 +59,55 @@ const config: Config = {
     ],
   ],
 
+  plugins: [
+    // 公众号文章
+    [
+      '@docusaurus/plugin-content-blog',
+      {
+        id: 'wechat',
+        path: 'blog-wechat',
+        routeBasePath: 'wechat',
+        showReadingTime: true,
+        blogTitle: '公众号',
+        blogDescription: '公众号文章存档',
+        postsPerPage: 10,
+        blogSidebarTitle: '公众号文章',
+        blogSidebarCount: 'ALL',
+        feedOptions: {
+          type: ['rss', 'atom'],
+          xslt: true,
+          title: '公众号文章',
+        },
+        onInlineTags: 'warn',
+        onInlineAuthors: 'warn',
+        onUntruncatedBlogPosts: 'ignore',
+      },
+    ],
+    // arXiv 日报
+    [
+      '@docusaurus/plugin-content-blog',
+      {
+        id: 'arxiv',
+        path: 'blog-arxiv',
+        routeBasePath: 'arxiv',
+        showReadingTime: false,
+        blogTitle: 'arXiv 日报',
+        blogDescription: '每日 arXiv 论文速览',
+        postsPerPage: 10,
+        blogSidebarTitle: '最近日报',
+        blogSidebarCount: 30,
+        feedOptions: {
+          type: ['rss', 'atom'],
+          xslt: true,
+          title: 'arXiv 日报',
+        },
+        onInlineTags: 'warn',
+        onInlineAuthors: 'warn',
+        onUntruncatedBlogPosts: 'ignore',
+      },
+    ],
+  ],
+
   themeConfig: {
     image: 'img/docusaurus-social-card.jpg',
     colorMode: {
@@ -68,14 +115,16 @@ const config: Config = {
       respectPrefersColorScheme: true,
     },
     navbar: {
-      title: '论文精读笔记',
+      title: 'W-void',
       logo: {
         alt: 'Logo',
         src: 'img/logo.svg',
       },
       items: [
-        {to: '/', label: '全部文章', position: 'left'},
-        {to: '/tags', label: '标签', position: 'left'},
+        {to: '/papers', label: '📄 最近精读', position: 'left'},
+        {to: '/wechat', label: '📱 公众号', position: 'left'},
+        {to: '/arxiv', label: '📰 arXiv 日报', position: 'left'},
+        {to: '/papers/tags', label: '🏷️ 标签', position: 'left'},
         {
           href: 'https://github.com/W-void/paper-blog',
           label: 'GitHub',
@@ -87,25 +136,27 @@ const config: Config = {
       style: 'dark',
       links: [
         {
-          title: '分类',
+          title: '内容',
           items: [
-            {label: '推荐系统', to: '/tags/推荐系统'},
-            {label: 'LLM', to: '/tags/llm'},
-            {label: '自监督学习', to: '/tags/自监督学习'},
-            {label: 'AI 科研自动化', to: '/tags/ai科研自动化'},
+            {label: '最近精读', to: '/papers'},
+            {label: '公众号', to: '/wechat'},
+            {label: 'arXiv 日报', to: '/arxiv'},
+          ],
+        },
+        {
+          title: '精读标签',
+          items: [
+            {label: '推荐系统', to: '/papers/tags/推荐系统'},
+            {label: 'LLM', to: '/papers/tags/llm'},
+            {label: '自监督学习', to: '/papers/tags/自监督学习'},
+            {label: 'AI 科研自动化', to: '/papers/tags/ai科研自动化'},
           ],
         },
         {
           title: '更多',
           items: [
-            {
-              label: 'GitHub',
-              href: 'https://github.com/W-void',
-            },
-            {
-              label: 'RSS 订阅',
-              href: 'pathname:///rss.xml',
-            },
+            {label: 'GitHub', href: 'https://github.com/W-void'},
+            {label: 'RSS 精读', href: 'pathname:///papers/rss.xml'},
           ],
         },
       ],
