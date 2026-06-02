@@ -5,101 +5,107 @@ tags: [公众号]
 ---
 
 
+![](/img/wechat/380b8536-2a9e-4a64-b9b1-f1e06c77f876-6a170d.png)
 
-![](/img/wechat/f2f2864c-6af2-479b-83f4-6d702adf6189-881ccc.png)
-Generative Recommendation for Large-Scale Advertising
-https://arxiv.org/pdf/2602.22732
+OneTrans: Unified Feature Interaction and Sequence Modeling with One Transformer in Industrial Recommender
 
-广告和推荐的核心区别是什么？排序公式多了个收入项？保证激励兼容的拍卖机制？考虑广告主意志的动态出价？来看看快手给出的广告的生成式方案。
+https://arxiv.org/pdf/2510.26104
 
+说到scaling law，大家的第一反应应该都是生成式。诚然，模型越大，越容易过拟合，所以泛化性更强的模型上限会更高。
 
+还有没有其他探索scaling law的启发式思路呢？统一特征、统一模块应该是共识之一，因为这样对硬件友好，更容易扩展参数，以达到增加算力的目的。
+
+OneTrans其实和RankMixer很像，都是：
+1. 统一序列和非序列特征。只不过两者刚好相反，rankmixer是将序列特征视作非序列特征，onetrans是将非序列特征视作序列特征（的target）。
+2. 统一模块，在判别式模型中堆叠。两者也是相反，rankmixer堆叠特征交叉模块，onetrans堆叠attention模块。
+
+要说两者的优劣吧，我觉得：
+1. rankmixer工程上更容易扩展，毕竟直接干掉了transformer，但特征的组合可能很关键；
+2. onetrans更容易迁移到其他业务上，毕竟很多业务的收益来源主要是序列；
+3. 美团的MTmixAtt可能是两者的折中。
+
+字节的风格还是偏务实的，不愿意去硬蹭生成式的概念。很多模型，明明不是GR，非要去蹭GR的概念。说实话，现在的生成式有点像推荐领域的“石墨烯”，是不是往里面加个“屎”都能号称提效？
+
+本文只是笔者对onetrans的浅显解读，更多理解请看作者本人的讲解：
+https://zhuanlan.zhihu.com/p/1967720826364212891
 
 # 1 背景
 
-本文给出广告生成式的三个核心挑战：
+统一序列特征和非序列特征是本文的主要卖点，之前的方法是将序列建模和特征交互作为独立模块分离引入了两个主要限制。作者认为这样存在两个问题：
+1. 模块分离限制了信息的双向交流流；
+2. 模块分离会打乱执行过程并增加延迟，影响扩展参数。
 
-1. **Advertisement Tokenization**。除了item本身的多模态语义信息，还要考虑广告账户的信息。比如同一个item，广告主A出价比广告主B高，A的优先级就要比B高。还有广告类型，比如短视频广告、商品广告、直播广告。
+![](/img/wechat/850f11b1-c779-4edc-9ace-f0cf9b79464e-c9cb4a.png)
 
-2. **Learning Paradigm**。需要考虑业务目标（如广告收入ecpm）和列表级指标。
+OneTrans的做法有点像大号的LHUC、PEPNet，把非序列特征直接作为target的补充信息，加到序列建模里去。所以上面作者画的图也很形象，去掉了橙色的MLP层，把蓝色的“Sequence Modeling Block”扩大，就成了OneTrans。
 
-3. **Real-Time Serving**。实时serving，比如广告主预算花完了、或者投放效果不及预期导致出价降低，要实时感知到（广告的SID要实时变）。
-
-对应的，针对上面三个挑战，本文的方法包含三个部分：
-
-1. **统一的广告SID（UA-SID）**。基于RQ-Kmeans的改进。
-
-2. **增加一个ecpm的预估项**。并提出list-wise RL（RSPO）。
-
-3. **LazyAR加快自回归解码速度**。和我前面理解的不一样，可能快手的广告主有钱，预算花不完所以广告候选比较稳定。
+说实话，我觉得“统一序列特征和非序列特征”这个出发点有点小。因为统一序列特征和非序列特征本文并不是第一个做的，rankmixer、homer这些统一模型基本都是这么做的，rankmixer直接声称去掉attention能在不损失精度的情况下扩展scaling law，homer针对特征异质性进行了专门的处理，在target和序列里都加入了非序列特征，相比之下onetrans的融合就没什么特色了。
 
 # 2 方法
 
-## 2.1 Unified Advertisement Semantic ID
 
-快手这个是广告的统一生成式模型，所以需要给不同类型的异构广告编码到统一SID空间中。
+![](/img/wechat/e6abdac7-7ffb-4067-b786-aa7a6a786722-998056.png)
 
+## 2.1 特征&分词
 
-![](/img/wechat/4cac5736-f10e-4497-b7bf-ff65d8d21aea-87fd2b.png)
+特征分为序列特征和非序列特征（包括：user特征、item特征和上下文特征）。
 
+- **非序列特征（NS）**。连续特征和离散特征分别分桶embedding和one-hot embedding。
 
-1. 设计了6个模版针对不同的广告，输入llm中得到语义向量。
+两种Tokenizer方式。
 
-2. 引入协同信息，用对比损失拉近/远正负样本：
-![](/img/wechat/bf9ca926-91a1-4224-a0f8-c62a7a41d87f-b5a34f.png)
+Group-wise Tokenizer：先分组，再mlp（rankmixer的方式）
+![](/img/wechat/2a5d3239-8e99-4d76-bb31-9145e8ed2054-6292e7.png)
 
-3. 多粒度多分辨率(MGMR)RQ-Kmeans。多分辨率（MR）体现在：较低层级使用较大的码本尽早捕捉主导因素，而较高层级则对低熵残差进行建模。多粒度（MG）体现在：直接把最后一层用广告信息硬编码，而非语义信息。
+Auto-Split Tokenizer：先mlp，再分组
+![](/img/wechat/c919a849-ea90-40e8-9332-1182ad76b3b2-608a56.png)
 
-意思是说，广告有很多规则类的特征，需要直接编码进SID。
+- **序列特征（S）**。
 
-## 2.2 Lazy Autoregressive Decoder
+n个多行为序列：
+![](/img/wechat/47fdd328-d15a-4099-896c-d45a70f14211-4de719.png)
 
-一个图就清晰了，改串行为并行，只有最后一层是串行的。
+每一类行为过一个共享的mlp进行对齐：
+![](/img/wechat/1d23f83b-2348-46f9-acb6-0bca39ddb930-d8d6e7.png)
 
-![](/img/wechat/0377e96a-4014-4e93-844f-a3e992477bda-46d66d.png)
+再对序列进行token化，方式有2种：1）按时间排列：按时间交错所有事件，并带有序列类型指示符；2）按行为类型排列：按事件影响连接序列，例如，购买→加入购物车→点击，在序列之间插入可学习的[SEP]标记。消融结果表明，当时间戳可用时，时间戳感知规则优于按影响排序的替代方案。
 
-感觉和虾皮onepiece里提到的隐式推理加速有点像，推理加速应该是llm一大子方向。
+![](/img/wechat/f91b342c-d6f7-4e00-8a01-32ab3761d875-359a61.png)
 
-## 2.3 Value-Aware Supervised Learning
-![](/img/wechat/faad9f01-b9ac-4cd7-a6aa-5c0c12013183-7f9c6f.png)
+（又不是NTP任务，为啥要加个[SEP]？作为bias么，也不是说一个causal窗口一个独特的[SEP]啊）
 
-在ntp 任务的基础上，增加了一个ecpm生成，对ecpm进行等频分桶（equiprobable buckets）。
-![](/img/wechat/e646e5a7-3c0f-43f6-b966-cc42e0788753-db81f7.png)
+## 2.2 OneTrans Block
 
-（这个ecpm的label应该和onerec一样，由判别式精排模型输出。那generator推全后，还需要离线用evaluator评估一次吗？）
-
-- 对不同行为施加不同的loss权重，这都是小trick了。
-
-然后对LazyAR并行的部分增加一个辅助的MTP loss，让并行部分直接生成target token而不依赖串行的结果：
-
-![](/img/wechat/9dbc04de-34fa-4309-815a-b64cbe044d79-dc186f.png)
-
-## 2.4 Ranking-Guided Reinforcement Learning
-
-最后还是得加一个强化，对齐业务、并实现可控的探索。
-
-RSPO (RankingGuided Softmax Preference Optimization)：列表级优化，这个损失和NDCG很像。
-
-公式如下，意思是，如果j的ecpm比i的ecpm低，且j的生成概率比i大，那就施加一个和排名（i、j）相关的惩罚。
-（所以样本肯定也是请求粒度的，不知道有没有包含未曝光样本）
-![](/img/wechat/dc2b8237-4b3b-453e-a08f-3598b9269bd8-0285d0.png)
-
-作者证明，这个loss就是NDCGcost的上界。
+序列特征按照时间顺序排（没有时间按照行为类型排），非序列特征放在最后，以此顺序进行Causal Attention。就相当于非序列特征作为target的扩充（sideinfo），参加target attention计算。
 
 
-作者将VSL视为学习用户兴趣项目上的稳定基础分布，而RSPO通过偏向生成更高价值的项目来完善这一分布，同时不偏离用户相关性。
+在计算attention时，序列特征共享一组QKV（毕竟都是item id），非序列特征每组特征一组QKV：
+![](/img/wechat/b9f21bfe-d463-49d5-b001-3f2b7f1f0d3e-b473ff.png)
 
-# 3 效率优化
+![](/img/wechat/1d84fd98-3f12-4ec5-92ef-80c962645d1a-757dee.png)
 
-作者还提出了一些效率优化方案：
 
-1. 动态beam search。本文的beam search数量不是均匀的，而是每层递增。然后高峰期降低。
+FFN层也一样，序列特征共享一组QKV（毕竟都是item id），非序列特征每组特征一组QKV：
+![](/img/wechat/fa6b819f-5bdf-40ce-94f6-e7fdef1b6613-3c172e.png)
 
-2. 结果缓存。在一定时间间隔（例如，一分钟）内的请求直接重用缓存的结果。
+## 2.3 序列金字塔
+那么长序列（千级别、万级别）肯定不是每个item都有用，所以就压缩。（6层，从长度1190线性压缩到12）
 
-3. 其他优化。提出束共享键值对缓存，以沿序列维度组织束。这允许多个束共享单个编码器键值对缓存，消除冗余内存访问，并将每步键值对读取复杂度从O(B·L)降低到O(L)。对beam search引入TopK预切割，它首先并行地从上一步骤的每个束中选择k个候选项，然后在聚合候选项上进行全局Top-k选择。将数值精度从FP32降低到FP8。
 
-# 4 实验
+# 3 实验
 
-没看到离线指标，只有业务指标。相比onerec-v2有很大提升：
+6层onetrans block，每个token emb维度256，multi head为4.
 
-![](/img/wechat/0674c064-b24f-424c-88c8-66e9e4555cfe-d6ca9f.png)
+- 离线auc：
+![](/img/wechat/00cdb902-b00d-4320-b97e-391f1232d2d1-8e608c.png)
+看上去本文是将rankmixer当作不带序列的特征交叉网络了。
+
+- 消融实验，[SEP]还是效果影响最大的。
+![](/img/wechat/120afbfd-2dbe-44ac-bf6a-e926377f3ac8-853325.png)
+
+
+- scaling law：把rankmixer按在地上摩擦。
+![](/img/wechat/87d10050-d643-4b63-b283-62781ea2b2b9-e12762.png)
+
+- 线上也是把rankmixer按在地上摩擦。
+![](/img/wechat/94e73dc8-0cbc-426e-a489-30f60dbce80f-83a914.png)

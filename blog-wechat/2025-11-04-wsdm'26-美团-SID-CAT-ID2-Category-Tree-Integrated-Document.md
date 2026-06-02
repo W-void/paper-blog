@@ -5,101 +5,86 @@ tags: [公众号]
 ---
 
 
+![](/img/wechat/95620dde-048a-476f-95f5-6d67ca552de6-20f534.png)
 
-![](/img/wechat/f2f2864c-6af2-479b-83f4-6d702adf6189-881ccc.png)
-Generative Recommendation for Large-Scale Advertising
-https://arxiv.org/pdf/2602.22732
+CAT-ID2: Category-Tree Integrated Document Identifier Learning
+for Generative Retrieval In E-commerce
 
-广告和推荐的核心区别是什么？排序公式多了个收入项？保证激励兼容的拍卖机制？考虑广告主意志的动态出价？来看看快手给出的广告的生成式方案。
+https://arxiv.org/pdf/2511.01461
 
+把检索词表（DocID）的结构信息引入SID的生成过程，让DocID老树发新芽，应该是一件挺有意思的事情。
 
+把id遮住，我还以为这篇文章是阿里的。
 
 # 1 背景
 
-本文给出广告生成式的三个核心挑战：
+搜索系统通常包括“语义理解-检索-排序”多个阶段。语义理解中的关键步骤是query rewriting，传统的query rewriting依赖规则或统计，泛化能力有限。
 
-1. **Advertisement Tokenization**。除了item本身的多模态语义信息，还要考虑广告账户的信息。比如同一个item，广告主A出价比广告主B高，A的优先级就要比B高。还有广告类型，比如短视频广告、商品广告、直播广告。
+生成式推荐（GR）一方面利用llm增强了语义理解能力，另一方面通过SID整合语义理解和检索，克服了多阶段的一些误差。
 
-2. **Learning Paradigm**。需要考虑业务目标（如广告收入ecpm）和列表级指标。
+本文认为，一种有效的语义ID构建方法必须满足三个关键属性：
+1. 相似的文档应该有相似的ID；
+2. 不相似的文档应该有独特的ID；
+3. 文档的语义ID应该是唯一的。
 
-3. **Real-Time Serving**。实时serving，比如广告主预算花完了、或者投放效果不及预期导致出价降低，要实时感知到（广告的SID要实时变）。
+前两条容易理解，第三条可能会有争议，一般认为冲突率在一个可接受的范围内就好。
 
-对应的，针对上面三个挑战，本文的方法包含三个部分：
-
-1. **统一的广告SID（UA-SID）**。基于RQ-Kmeans的改进。
-
-2. **增加一个ecpm的预估项**。并提出list-wise RL（RSPO）。
-
-3. **LazyAR加快自回归解码速度**。和我前面理解的不一样，可能快手的广告主有钱，预算花不完所以广告候选比较稳定。
+RQ-VAE这种无监督聚类捕捉层次结构，缺乏可靠性；强制类别内一致性约束又太严格，忽略全局语义关系。所以本文采用将类别信息作为软约束（其实就是辅助loss）。
 
 # 2 方法
 
-## 2.1 Unified Advertisement Semantic ID
+![](/img/wechat/598c7727-ce22-450d-b528-85361dae1630-842853.png)
+其实就是3个loss。
 
-快手这个是广告的统一生成式模型，所以需要给不同类型的异构广告编码到统一SID空间中。
+## 2.0 原始的RQ-VAE loss
 
+原始embedding用d表示，encoder到隐空间后为z，z再经过量化变为$\hat{z}$，重构损失就是decoder后再还原回d：
 
-![](/img/wechat/4cac5736-f10e-4497-b7bf-ff65d8d21aea-87fd2b.png)
+![](/img/wechat/076ef161-b6f9-4c40-8d46-a5eef0c9286d-cbc94c.png)
 
+## 2.1 分层类别约束loss
+约束相同品类的doc在同一个code中。
+![](/img/wechat/fa1d9ab9-c559-40b6-933c-e0cfb2dc5efc-986f7f.png)
+其中，$r_a$、$r_p$、$r_n$分别代表锚点样本、正样本和负样本。同一类别内的文档被视为正例，而来自不同类别的文档则被视为负例。从第二层开始，选择在前一层属于同一类别但在当前层落入不同子类别的作为负样本。
 
-1. 设计了6个模版针对不同的广告，输入llm中得到语义向量。
+值得注意的是，类别树的最大深度 H 必须小于 RQ-VAE 的最大深度 L，才能使用此方法。
 
-2. 引入协同信息，用对比损失拉近/远正负样本：
-![](/img/wechat/bf9ca926-91a1-4224-a0f8-c62a7a41d87f-b5a34f.png)
+## 2.2 簇尺度约束loss
+如果类别数量|C|小于码本数量K，那么每个类别的样本可能会独占一个码本code，就起不到聚类的效果（相当于K-means选的聚类中心数量比样本数量还多）。
+![](/img/wechat/df0e7267-5cf8-4335-9c5c-2bcc1f640582-4bef86.png)
+直接让样本属于某个code的概率和全1向量计算双向的KL散度。双向KL散度有两个目的：第一项防止过度使用某些码本code，而第二项则对未使用的码本code进行惩罚。CSCL通过鼓励样本在码本条目上的平均分布接近平均分布，来惩罚分配不平衡的情况。因此，它显著提高了码本的利用效率。
 
-3. 多粒度多分辨率(MGMR)RQ-Kmeans。多分辨率（MR）体现在：较低层级使用较大的码本尽早捕捉主导因素，而较高层级则对低熵残差进行建模。多粒度（MG）体现在：直接把最后一层用广告信息硬编码，而非语义信息。
-
-意思是说，广告有很多规则类的特征，需要直接编码进SID。
-
-## 2.2 Lazy Autoregressive Decoder
-
-一个图就清晰了，改串行为并行，只有最后一层是串行的。
-
-![](/img/wechat/0377e96a-4014-4e93-844f-a3e992477bda-46d66d.png)
-
-感觉和虾皮onepiece里提到的隐式推理加速有点像，推理加速应该是llm一大子方向。
-
-## 2.3 Value-Aware Supervised Learning
-![](/img/wechat/faad9f01-b9ac-4cd7-a6aa-5c0c12013183-7f9c6f.png)
-
-在ntp 任务的基础上，增加了一个ecpm生成，对ecpm进行等频分桶（equiprobable buckets）。
-![](/img/wechat/e646e5a7-3c0f-43f6-b966-cc42e0788753-db81f7.png)
-
-（这个ecpm的label应该和onerec一样，由判别式精排模型输出。那generator推全后，还需要离线用evaluator评估一次吗？）
-
-- 对不同行为施加不同的loss权重，这都是小trick了。
-
-然后对LazyAR并行的部分增加一个辅助的MTP loss，让并行部分直接生成target token而不依赖串行的结果：
-
-![](/img/wechat/9dbc04de-34fa-4309-815a-b64cbe044d79-dc186f.png)
-
-## 2.4 Ranking-Guided Reinforcement Learning
-
-最后还是得加一个强化，对齐业务、并实现可控的探索。
-
-RSPO (RankingGuided Softmax Preference Optimization)：列表级优化，这个损失和NDCG很像。
-
-公式如下，意思是，如果j的ecpm比i的ecpm低，且j的生成概率比i大，那就施加一个和排名（i、j）相关的惩罚。
-（所以样本肯定也是请求粒度的，不知道有没有包含未曝光样本）
-![](/img/wechat/dc2b8237-4b3b-453e-a08f-3598b9269bd8-0285d0.png)
-
-作者证明，这个loss就是NDCGcost的上界。
+（感觉让模型既要往左、又要往右，你就说考虑的全不全吧，然后效果全靠调参是吧。不如对每个类别C设置不同的权重，但超参数也太多了hh）
 
 
-作者将VSL视为学习用户兴趣项目上的稳定基础分布，而RSPO通过偏向生成更高价值的项目来完善这一分布，同时不偏离用户相关性。
+## 2.3 分散loss：
 
-# 3 效率优化
+争议最大的第三点来了，为了保证文档语义ID的唯一性，让解码后的$\hat{d}$和其他doc距离尽可能远。
 
-作者还提出了一些效率优化方案：
+![](/img/wechat/6147af31-c9f0-491e-be72-e8a8e01c1e26-b0d9fd.png)
 
-1. 动态beam search。本文的beam search数量不是均匀的，而是每层递增。然后高峰期降低。
+重构损失是让$\hat{d}$和d尽可能接近，这个loss是让$\hat{d}$和其他$\hat{d}$尽可能远。
 
-2. 结果缓存。在一定时间间隔（例如，一分钟）内的请求直接重用缓存的结果。
+（感觉这个loss有点多余呢，如果$d_i$和$d_j$本来就远，重构损失就能让$\hat{d}_i$和$\hat{d}_j$拉远，如果如果$d_i$和$d_j$本来就近，这个损失就和重构损失矛盾了，最后就变成调参的艺术了。）
 
-3. 其他优化。提出束共享键值对缓存，以沿序列维度组织束。这允许多个束共享单个编码器键值对缓存，消除冗余内存访问，并将每步键值对读取复杂度从O(B·L)降低到O(L)。对beam search引入TopK预切割，它首先并行地从上一步骤的每个束中选择k个候选项，然后在聚合候选项上进行全局Top-k选择。将数值精度从FP32降低到FP8。
 
-# 4 实验
+最终的loss：
 
-没看到离线指标，只有业务指标。相比onerec-v2有很大提升：
+![](/img/wechat/9b89e5ad-c27e-4882-89b6-07c27a673d60-a0becd.png)
 
-![](/img/wechat/0674c064-b24f-424c-88c8-66e9e4555cfe-d6ca9f.png)
+
+# 3 结论
+
+离线效果：
+![](/img/wechat/337873f4-4af8-4a93-93ed-6d5d402234f3-fb92ca.png)
+
+超参数分析：
+![](/img/wechat/415f1d9c-0507-4627-826a-82280d29c204-abb2e4.png)
+
+
+在线AB：
+![](/img/wechat/afe95c2a-3db9-42fc-bab0-4136103f38df-be155d.png)
+
+
+这个图画的真不错，看上去浅层还有明显的类别属性，深层基本就均匀分布了。
+![](/img/wechat/422af4c3-d026-4ad6-911b-5eb7c774cc68-11e3f4.png)

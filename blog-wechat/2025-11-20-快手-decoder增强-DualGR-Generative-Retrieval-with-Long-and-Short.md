@@ -5,101 +5,78 @@ tags: [公众号]
 ---
 
 
+![](/img/wechat/48183711-917e-468d-a2e2-8b80d0519db0-128282.png)
 
-![](/img/wechat/f2f2864c-6af2-479b-83f4-6d702adf6189-881ccc.png)
-Generative Recommendation for Large-Scale Advertising
-https://arxiv.org/pdf/2602.22732
+DualGR: Generative Retrieval with Long and Short-Term Interests Modeling
+https://arxiv.org/pdf/2511.12518
 
-广告和推荐的核心区别是什么？排序公式多了个收入项？保证激励兼容的拍卖机制？考虑广告主意志的动态出价？来看看快手给出的广告的生成式方案。
+快手双列信息流的工作。看名字里的“Dual”，还以为是美团双流GR之流的文章，其实是decoder增强，值得一读。
 
+decoder是GR的核心，是真正的生成模块。判别模型可以将target作为输入得到很精确的预估，而生成模型看不到target，所以将其他信息作为decoder的输入（条件）来增强生成过程。比如：请求粒度生成将候选集作为生成条件、pinrec将行为作为生成条件、搜索的GR往往将query作为生成条件、onerec-think将LLM的推理作为生成条件，本文从历史行为中sim出相关行为作为生成条件。
 
+其实onerec-think的推理文本也是基于历史行为做sim的，只不过本文在（多层sid的）每一步生成时都做了sim。
+
+但本文在训练时用target做sim，推理时拿不到target信息只能全量参与不做sim，个人比较担心存在较大的训练-推理不一致问题。
 
 # 1 背景
 
-本文给出广告生成式的三个核心挑战：
-
-1. **Advertisement Tokenization**。除了item本身的多模态语义信息，还要考虑广告账户的信息。比如同一个item，广告主A出价比广告主B高，A的优先级就要比B高。还有广告类型，比如短视频广告、商品广告、直播广告。
-
-2. **Learning Paradigm**。需要考虑业务目标（如广告收入ecpm）和列表级指标。
-
-3. **Real-Time Serving**。实时serving，比如广告主预算花完了、或者投放效果不及预期导致出价降低，要实时感知到（广告的SID要实时变）。
-
-对应的，针对上面三个挑战，本文的方法包含三个部分：
-
-1. **统一的广告SID（UA-SID）**。基于RQ-Kmeans的改进。
-
-2. **增加一个ecpm的预估项**。并提出list-wise RL（RSPO）。
-
-3. **LazyAR加快自回归解码速度**。和我前面理解的不一样，可能快手的广告主有钱，预算花不完所以广告候选比较稳定。
+现在GR的问题：
+1. 长短兴趣干扰。多兴趣在生成时缺乏显示的控制，当稳定的偏好和短暂的热点共存时，注意力和梯度可能会相互稀释，使生成变得不稳定，打破相关性-多样性平衡。
+2. 上下文噪声和长历史约束。SID一般都是多层的（3层居多），越靠后的层（level-2/3）越容易被噪声干扰。同时，在检索的严格延迟预算下，如果没有在交互之前进行类别级别的粗略筛选，使用长历史记录将变得不可行。（p.s.没太懂，decoder在生成level-2时，会将level-1对长序列再计算一次attention吧，这应该就是一种粗筛吧？）
+3. 缺少负面反馈。工业日志包含许多曝光未点击样本，现在的GR方法缺少对这种负反馈的建模，这阻碍了非兴趣方向的及时淡出，从而降低了解码质量和覆盖效率。
 
 # 2 方法
 
-## 2.1 Unified Advertisement Semantic ID
+包括三个部分：长短期双流、基于sim的生成、和曝光感知的NTPloss。
+![](/img/wechat/b61143fc-169b-465f-a0ac-03f78bc340e1-454acf.png)
 
-快手这个是广告的统一生成式模型，所以需要给不同类型的异构广告编码到统一SID空间中。
+## 2.1 长短期双流
 
+只对长短期序列的第一层sid: $s^{(1)}$进行计算：
+![](/img/wechat/d429851b-e6d6-46a0-ab7d-484f4ee23a54-8131d2.png)
 
-![](/img/wechat/4cac5736-f10e-4497-b7bf-ff65d8d21aea-87fd2b.png)
+训练时用ground-truth的第一层sid：$\mathbf{e}_{\star}^{(1)}$，对长短期序列的第一层sid进行相似度计算，从历史行为中检索出最相近的top-K$\mathcal{H}_{t}^{\star}$：
 
+![](/img/wechat/a85c9dd2-133b-4cb6-b448-ae84c124328a-486eb3.png)
 
-1. 设计了6个模版针对不同的广告，输入llm中得到语义向量。
+将检索出的top-K $\mathcal{H}_{t}^{\star}$ 作为输入的一部分：
+![](/img/wechat/3c34c24b-aa7d-4a07-81aa-adf1c07c2e0d-2c53c8.png)
 
-2. 引入协同信息，用对比损失拉近/远正负样本：
-![](/img/wechat/bf9ca926-91a1-4224-a0f8-c62a7a41d87f-b5a34f.png)
+推理时没有ground-truth只能全量参与：
+![](/img/wechat/e671e75a-f2a7-40bc-964c-08ea17315717-a61d6d.png)
 
-3. 多粒度多分辨率(MGMR)RQ-Kmeans。多分辨率（MR）体现在：较低层级使用较大的码本尽早捕捉主导因素，而较高层级则对低熵残差进行建模。多粒度（MG）体现在：直接把最后一层用广告信息硬编码，而非语义信息。
+相当于训练时只用检索出来的部分序列，推理时用全部序列。
 
-意思是说，广告有很多规则类的特征，需要直接编码进SID。
+![](/img/wechat/e90590b2-30fd-4711-ba62-77d3c14c17d6-c8afe4.png)
 
-## 2.2 Lazy Autoregressive Decoder
-
-一个图就清晰了，改串行为并行，只有最后一层是串行的。
-
-![](/img/wechat/0377e96a-4014-4e93-844f-a3e992477bda-46d66d.png)
-
-感觉和虾皮onepiece里提到的隐式推理加速有点像，推理加速应该是llm一大子方向。
-
-## 2.3 Value-Aware Supervised Learning
-![](/img/wechat/faad9f01-b9ac-4cd7-a6aa-5c0c12013183-7f9c6f.png)
-
-在ntp 任务的基础上，增加了一个ecpm生成，对ecpm进行等频分桶（equiprobable buckets）。
-![](/img/wechat/e646e5a7-3c0f-43f6-b966-cc42e0788753-db81f7.png)
-
-（这个ecpm的label应该和onerec一样，由判别式精排模型输出。那generator推全后，还需要离线用evaluator评估一次吗？）
-
-- 对不同行为施加不同的loss权重，这都是小trick了。
-
-然后对LazyAR并行的部分增加一个辅助的MTP loss，让并行部分直接生成target token而不依赖串行的结果：
-
-![](/img/wechat/9dbc04de-34fa-4309-815a-b64cbe044d79-dc186f.png)
-
-## 2.4 Ranking-Guided Reinforcement Learning
-
-最后还是得加一个强化，对齐业务、并实现可控的探索。
-
-RSPO (RankingGuided Softmax Preference Optimization)：列表级优化，这个损失和NDCG很像。
-
-公式如下，意思是，如果j的ecpm比i的ecpm低，且j的生成概率比i大，那就施加一个和排名（i、j）相关的惩罚。
-（所以样本肯定也是请求粒度的，不知道有没有包含未曝光样本）
-![](/img/wechat/dc2b8237-4b3b-453e-a08f-3598b9269bd8-0285d0.png)
-
-作者证明，这个loss就是NDCGcost的上界。
+![](/img/wechat/63c04986-deac-477f-8f48-125c378d1b18-41e9bf.png)
 
 
-作者将VSL视为学习用户兴趣项目上的稳定基础分布，而RSPO通过偏向生成更高价值的项目来完善这一分布，同时不偏离用户相关性。
+## 2.2 基于sim的生成
 
-# 3 效率优化
+![](/img/wechat/483b4e09-2c1e-43c6-acee-462c59a2ff02-10bdee.png)
 
-作者还提出了一些效率优化方案：
+训练时只检索和ground-truth第一层sid相关的行为：
+![](/img/wechat/b2c07c17-f401-48e1-a287-639ff7b33a1e-4364b8.png)
 
-1. 动态beam search。本文的beam search数量不是均匀的，而是每层递增。然后高峰期降低。
+然后生成后面的sid：
 
-2. 结果缓存。在一定时间间隔（例如，一分钟）内的请求直接重用缓存的结果。
+![](/img/wechat/7240d106-0a37-4988-b072-5717af310dd0-015a72.png)
 
-3. 其他优化。提出束共享键值对缓存，以沿序列维度组织束。这允许多个束共享单个编码器键值对缓存，消除冗余内存访问，并将每步键值对读取复杂度从O(B·L)降低到O(L)。对beam search引入TopK预切割，它首先并行地从上一步骤的每个束中选择k个候选项，然后在聚合候选项上进行全局Top-k选择。将数值精度从FP32降低到FP8。
+推理时同样没有ground-truth，只能全量参与（感觉这样得到的只能是用户平均兴趣）。
 
-# 4 实验
+## 2.3 曝光感知的NTPloss
 
-没看到离线指标，只有业务指标。相比onerec-v2有很大提升：
+只对第一层sid的预估值$p^{(1)}$施加一个曝光未点击损失，$c_i=1$表示点击，$1-c_i=1$表示曝光未点击：
+![](/img/wechat/82acb269-8205-40b9-88d4-2b53da3bab22-6426b9.png)
 
-![](/img/wechat/0674c064-b24f-424c-88c8-66e9e4555cfe-d6ca9f.png)
+
+
+# 3 实验
+
+离线效果：
+
+![](/img/wechat/0397c5c0-d896-4895-97a7-39822c3ac0ba-73008e.png)
+
+在线AB：
+![](/img/wechat/e6c7523b-20ef-47a7-9649-70c01f0f9806-d6b5d1.png)

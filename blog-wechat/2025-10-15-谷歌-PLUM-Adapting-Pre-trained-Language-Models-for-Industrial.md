@@ -5,101 +5,91 @@ tags: [公众号]
 ---
 
 
+![](/img/wechat/c9e77724-5623-4508-9d75-d0772c720c70-bf78ac.png)
 
-![](/img/wechat/f2f2864c-6af2-479b-83f4-6d702adf6189-881ccc.png)
-Generative Recommendation for Large-Scale Advertising
-https://arxiv.org/pdf/2602.22732
+[PLUM: Adapting Pre-trained Language Models for Industrial-scale Generative Recommendations](https://arxiv.org/pdf/2510.07784)
 
-广告和推荐的核心区别是什么？排序公式多了个收入项？保证激励兼容的拍卖机制？考虑广告主意志的动态出价？来看看快手给出的广告的生成式方案。
+前两天还说工业界都比较保守，主要在SID-based GR上做SID增强、prompt增强、稳定性的工作，今天deepmind就这么激进地来了一篇LLM-as-RS。
 
+![](/img/wechat/819d6b06-e638-40c5-a978-1233b98e62aa-c5d68d.png)
 
+应该是已经部署在了YouTube上。
 
 # 1 背景
 
-本文给出广告生成式的三个核心挑战：
+传统推荐系统是ID-based，参数主要在高度稀疏的ID embedding上，后续的dense部分很简单（甚至有one-epoch这种过拟合现象）。
 
-1. **Advertisement Tokenization**。除了item本身的多模态语义信息，还要考虑广告账户的信息。比如同一个item，广告主A出价比广告主B高，A的优先级就要比B高。还有广告类型，比如短视频广告、商品广告、直播广告。
+LLM（生成式）是反过来的，将稀疏的ID压缩成稠密的SID，以此来增加dense参数、释放模型能力。（所以你认为SID是生成式必须的吗？）
 
-2. **Learning Paradigm**。需要考虑业务目标（如广告收入ecpm）和列表级指标。
+本文是将LLM直接作为推荐模型。作者认为，LLM用于推荐的主要挑战在于：
+1. 领域差距，LLM没有吃过推荐的数据，不适配；
+2. ID表征，推荐场景的词表太大了。
 
-3. **Real-Time Serving**。实时serving，比如广告主预算花完了、或者投放效果不及预期导致出价降低，要实时感知到（广告的SID要实时变）。
+就引出了本文的三个模块：
+1. SID-v2；
+2. 持续预训练，Continued pre-training (CPT)；
+3. 微调。
 
-对应的，针对上面三个挑战，本文的方法包含三个部分：
-
-1. **统一的广告SID（UA-SID）**。基于RQ-Kmeans的改进。
-
-2. **增加一个ecpm的预估项**。并提出list-wise RL（RSPO）。
-
-3. **LazyAR加快自回归解码速度**。和我前面理解的不一样，可能快手的广告主有钱，预算花不完所以广告候选比较稳定。
+（因为LLM结构是没办法变的了，也只能改这些了吧。）
 
 # 2 方法
 
-## 2.1 Unified Advertisement Semantic ID
+## 2.1 SID-v2
+SID流程一般包括两步：
+1. 将特征（sideinfo）编码成稠密的语义embedding；
+2. 将密的语义embedding离散化成SID。
 
-快手这个是广告的统一生成式模型，所以需要给不同类型的异构广告编码到统一SID空间中。
+本文的SID方案如下：
+![](/img/wechat/c74f9dc1-880b-4261-a992-4e684ca9885a-3a9529.png)
+1. 融合多模态特征，包括文本、视频、音频。（常规操作）
+2. 多层精细化量化。可以看到，本文的码本层数达到了8层（虽然图中画的是5层），onerec、onesearch里都有提到，层数大于3后效果就不好了。本文的方案是**先加大层数再约束**：
+- **约束1: 多分辨率码本**。每层的码本大小逐渐减小（残差信息越来越少）：$$2048/2^{level-1}$$ 
+- **约束2: 渐进式掩码**。类似于tf.sequence_mask，引入随机mask。
 
+3. 共现对比损失。用共现过的item进行对比增强。
+![](/img/wechat/2d5b2e64-ab41-483b-9166-41ad7a6a1784-13977f.png)
 
-![](/img/wechat/4cac5736-f10e-4497-b7bf-ff65d8d21aea-87fd2b.png)
+## 2.2 预训练（Continued Pre-training）
 
+用NTP任务做预训练，不仅用用户行为数据，还用视频元数据做NTP。样本格式如下：
+![](/img/wechat/5a184b39-6011-4446-8566-77741677208b-63a9bb.png)
 
-1. 设计了6个模版针对不同的广告，输入llm中得到语义向量。
+## 2.3 SFT
 
-2. 引入协同信息，用对比损失拉近/远正负样本：
-![](/img/wechat/bf9ca926-91a1-4224-a0f8-c62a7a41d87f-b5a34f.png)
+![](/img/wechat/42193044-52bc-4d2f-95f2-b6e97b47f626-5c8dc8.png)
 
-3. 多粒度多分辨率(MGMR)RQ-Kmeans。多分辨率（MR）体现在：较低层级使用较大的码本尽早捕捉主导因素，而较高层级则对低熵残差进行建模。多粒度（MG）体现在：直接把最后一层用广告信息硬编码，而非语义信息。
+输入prompt不仅包含SID token 和用于数值特征的自定义token，还包含其他可以由预训练的LLM自然编码的文本特征。
 
-意思是说，广告有很多规则类的特征，需要直接编码进SID。
+（看这个图感觉码本有A-H 8层）
 
-## 2.2 Lazy Autoregressive Decoder
-
-一个图就清晰了，改串行为并行，只有最后一层是串行的。
-
-![](/img/wechat/0377e96a-4014-4e93-844f-a3e992477bda-46d66d.png)
-
-感觉和虾皮onepiece里提到的隐式推理加速有点像，推理加速应该是llm一大子方向。
-
-## 2.3 Value-Aware Supervised Learning
-![](/img/wechat/faad9f01-b9ac-4cd7-a6aa-5c0c12013183-7f9c6f.png)
-
-在ntp 任务的基础上，增加了一个ecpm生成，对ecpm进行等频分桶（equiprobable buckets）。
-![](/img/wechat/e646e5a7-3c0f-43f6-b966-cc42e0788753-db81f7.png)
-
-（这个ecpm的label应该和onerec一样，由判别式精排模型输出。那generator推全后，还需要离线用evaluator评估一次吗？）
-
-- 对不同行为施加不同的loss权重，这都是小trick了。
-
-然后对LazyAR并行的部分增加一个辅助的MTP loss，让并行部分直接生成target token而不依赖串行的结果：
-
-![](/img/wechat/9dbc04de-34fa-4309-815a-b64cbe044d79-dc186f.png)
-
-## 2.4 Ranking-Guided Reinforcement Learning
-
-最后还是得加一个强化，对齐业务、并实现可控的探索。
-
-RSPO (RankingGuided Softmax Preference Optimization)：列表级优化，这个损失和NDCG很像。
-
-公式如下，意思是，如果j的ecpm比i的ecpm低，且j的生成概率比i大，那就施加一个和排名（i、j）相关的惩罚。
-（所以样本肯定也是请求粒度的，不知道有没有包含未曝光样本）
-![](/img/wechat/dc2b8237-4b3b-453e-a08f-3598b9269bd8-0285d0.png)
-
-作者证明，这个loss就是NDCGcost的上界。
+![](/img/wechat/5f97b261-0146-4377-9285-26be01695866-ece75c.png)
 
 
-作者将VSL视为学习用户兴趣项目上的稳定基础分布，而RSPO通过偏向生成更高价值的项目来完善这一分布，同时不偏离用户相关性。
+# 3 实验
 
-# 3 效率优化
+基座模型是Gemini-1.5（900M参数）。在长视频和短视频上做实验。base 模型是一个传统的large embedding model，dense部分的参数仅占0.4%。而本文PLUM的dense参数占到了90%。
 
-作者还提出了一些效率优化方案：
+- 对比指标也有点意思，Effective Vocab Size：覆盖95%的词表需要多少视频。（SID-based model和ID-based model 比不是欺负人吗。）WT和WF分别是观看视频的长度和比例。
+![](/img/wechat/7ee7de39-8c54-4e3a-a921-9f61e223bdb4-f1d606.png)
 
-1. 动态beam search。本文的beam search数量不是均匀的，而是每层递增。然后高峰期降低。
+- 除了点击和时长，用户的各种参与度指标也有提升。
+![](/img/wechat/8a046c5e-6f82-4c61-a752-89413212fa05-91999e.png)
 
-2. 结果缓存。在一定时间间隔（例如，一分钟）内的请求直接重用缓存的结果。
+- 训练成本也降低到了0.55倍。虽然单个样本的训练成本变大了，但样本数量变少了。训练9亿参数的PLUM，仅需要2.5亿的样本，传统模型需要数十亿。
 
-3. 其他优化。提出束共享键值对缓存，以沿序列维度组织束。这允许多个束共享单个编码器键值对缓存，消除冗余内存访问，并将每步键值对读取复杂度从O(B·L)降低到O(L)。对beam search引入TopK预切割，它首先并行地从上一步骤的每个束中选择k个候选项，然后在聚合候选项上进行全局Top-k选择。将数值精度从FP32降低到FP8。
+- SID的消融实验。SID的唯一率这么高。看上去共现损失才是最关键的。没有看到码本层数的超参数实验。
 
-# 4 实验
 
-没看到离线指标，只有业务指标。相比onerec-v2有很大提升：
+![](/img/wechat/20fc78c5-bcda-496c-8805-0de2b5051746-0747f8.png)
 
-![](/img/wechat/0674c064-b24f-424c-88c8-66e9e4555cfe-d6ca9f.png)
+
+- 用LLM初始化，效果比从头训练好。
+
+
+![](/img/wechat/eeee8f5d-1efc-4ddb-8830-531a64341587-5041f8.png)
+
+![](/img/wechat/6c6ac0da-ef97-498c-b3b8-ef9747129e97-510f03.png)
+
+- scaling law。作者解释3B效果不好是因为还没训练完。
+
+![](/img/wechat/48216cab-1a89-4c53-aa3f-06ca545d6f1a-2e4243.png)

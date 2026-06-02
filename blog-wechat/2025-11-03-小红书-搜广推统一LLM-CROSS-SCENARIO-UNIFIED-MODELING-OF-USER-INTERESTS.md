@@ -5,101 +5,58 @@ tags: [公众号]
 ---
 
 
+![](/img/wechat/a1267df7-0ce1-4213-93b5-5eda4059f98b-2f2469.png)
 
-![](/img/wechat/f2f2864c-6af2-479b-83f4-6d702adf6189-881ccc.png)
-Generative Recommendation for Large-Scale Advertising
-https://arxiv.org/pdf/2602.22732
+CROSS-SCENARIO UNIFIED MODELING OF USER INTERESTS AT BILLION SCALE
+https://arxiv.org/pdf/2510.14788
 
-广告和推荐的核心区别是什么？排序公式多了个收入项？保证激励兼容的拍卖机制？考虑广告主意志的动态出价？来看看快手给出的广告的生成式方案。
-
-
+小红书这种笔记内容的app，简直太适合LLM落地了。这篇文章，llm as Rec，研究跨场景统一大模型，直接整合了搜广推（homefeed, advertisements, search）三个主要场景。这得释放多少人力成本啊，小红书的兄弟们还好吗？
 
 # 1 背景
 
-本文给出广告生成式的三个核心挑战：
+llm落地多场景，同样面临场景不平衡的问题。
 
-1. **Advertisement Tokenization**。除了item本身的多模态语义信息，还要考虑广告账户的信息。比如同一个item，广告主A出价比广告主B高，A的优先级就要比B高。还有广告类型，比如短视频广告、商品广告、直播广告。
-
-2. **Learning Paradigm**。需要考虑业务目标（如广告收入ecpm）和列表级指标。
-
-3. **Real-Time Serving**。实时serving，比如广告主预算花完了、或者投放效果不及预期导致出价降低，要实时感知到（广告的SID要实时变）。
-
-对应的，针对上面三个挑战，本文的方法包含三个部分：
-
-1. **统一的广告SID（UA-SID）**。基于RQ-Kmeans的改进。
-
-2. **增加一个ecpm的预估项**。并提出list-wise RL（RSPO）。
-
-3. **LazyAR加快自回归解码速度**。和我前面理解的不一样，可能快手的广告主有钱，预算花不完所以广告候选比较稳定。
+本文还公开了一个数据集，RED-MMU，包含搜广推三个场景，点击、点赞、收藏、分享、观看时长等多种正向行为，数十亿项目和超过一亿用户的行为记录。
 
 # 2 方法
 
-## 2.1 Unified Advertisement Semantic ID
+输入是四元组：item、行为类型、场景、时间戳。
+![](/img/wechat/f3490749-a1e5-43f3-98c6-f4514e252a13-41175a.png)
 
-快手这个是广告的统一生成式模型，所以需要给不同类型的异构广告编码到统一SID空间中。
+目标是学习统一的用户和item表征：
+![](/img/wechat/5364aeb9-23e4-4fd9-ad5f-505bce08acf8-a9fb5d.png)
 
+emb生成分为三层：item层、user层（多场景序列）、场景层（场景作为query提取用户信息）。
+![](/img/wechat/f2f0f963-0418-46d1-bce9-475f19a31653-fb11a0.png)
 
-![](/img/wechat/4cac5736-f10e-4497-b7bf-ff65d8d21aea-87fd2b.png)
+- item层包括文本内容、ocr补充信息和视觉信息。
+- user层item表征序列 $\mathrm{H}_u$、行为类型表征序列 $\mathrm{A}_u$、时间戳（hour）表征序列，搜广推混合序列：
+![](/img/wechat/95924b81-012f-4b74-a3fd-9cf69369a1d7-cff680.png)
 
+- 场景层。给场景定义了k个可学习向量：$Q=[q_1, q_2,... , q_K] $，对用户最近的w个行为进行多兴趣提取：
+![](/img/wechat/18e3420a-5474-401e-9290-ab3df0802833-b55865.png)
 
-1. 设计了6个模版针对不同的广告，输入llm中得到语义向量。
+RED-Rec框架：
+![](/img/wechat/722a0e71-5fb2-4c25-a5be-fc5a68154fee-719db9.png)
 
-2. 引入协同信息，用对比损失拉近/远正负样本：
-![](/img/wechat/bf9ca926-91a1-4224-a0f8-c62a7a41d87f-b5a34f.png)
+训练用infoNCE loss：
 
-3. 多粒度多分辨率(MGMR)RQ-Kmeans。多分辨率（MR）体现在：较低层级使用较大的码本尽早捕捉主导因素，而较高层级则对低熵残差进行建模。多粒度（MG）体现在：直接把最后一层用广告信息硬编码，而非语义信息。
-
-意思是说，广告有很多规则类的特征，需要直接编码进SID。
-
-## 2.2 Lazy Autoregressive Decoder
-
-一个图就清晰了，改串行为并行，只有最后一层是串行的。
-
-![](/img/wechat/0377e96a-4014-4e93-844f-a3e992477bda-46d66d.png)
-
-感觉和虾皮onepiece里提到的隐式推理加速有点像，推理加速应该是llm一大子方向。
-
-## 2.3 Value-Aware Supervised Learning
-![](/img/wechat/faad9f01-b9ac-4cd7-a6aa-5c0c12013183-7f9c6f.png)
-
-在ntp 任务的基础上，增加了一个ecpm生成，对ecpm进行等频分桶（equiprobable buckets）。
-![](/img/wechat/e646e5a7-3c0f-43f6-b966-cc42e0788753-db81f7.png)
-
-（这个ecpm的label应该和onerec一样，由判别式精排模型输出。那generator推全后，还需要离线用evaluator评估一次吗？）
-
-- 对不同行为施加不同的loss权重，这都是小trick了。
-
-然后对LazyAR并行的部分增加一个辅助的MTP loss，让并行部分直接生成target token而不依赖串行的结果：
-
-![](/img/wechat/9dbc04de-34fa-4309-815a-b64cbe044d79-dc186f.png)
-
-## 2.4 Ranking-Guided Reinforcement Learning
-
-最后还是得加一个强化，对齐业务、并实现可控的探索。
-
-RSPO (RankingGuided Softmax Preference Optimization)：列表级优化，这个损失和NDCG很像。
-
-公式如下，意思是，如果j的ecpm比i的ecpm低，且j的生成概率比i大，那就施加一个和排名（i、j）相关的惩罚。
-（所以样本肯定也是请求粒度的，不知道有没有包含未曝光样本）
-![](/img/wechat/dc2b8237-4b3b-453e-a08f-3598b9269bd8-0285d0.png)
-
-作者证明，这个loss就是NDCGcost的上界。
+![](/img/wechat/c676be3f-84e2-4d50-a919-8a8ffc3ed108-4807a7.png)
 
 
-作者将VSL视为学习用户兴趣项目上的稳定基础分布，而RSPO通过偏向生成更高价值的项目来完善这一分布，同时不偏离用户相关性。
+# 3 实验
 
-# 3 效率优化
+item llm 和 user llm 用的是 Chinese-LLaMA-1.3B 和 Qwen-2.5-1.5B。
 
-作者还提出了一些效率优化方案：
+效果简直好到飞起：
 
-1. 动态beam search。本文的beam search数量不是均匀的，而是每层递增。然后高峰期降低。
+![](/img/wechat/4c48a31a-072e-47f5-842b-f3c6a61ee0da-00403f.png)
 
-2. 结果缓存。在一定时间间隔（例如，一分钟）内的请求直接重用缓存的结果。
 
-3. 其他优化。提出束共享键值对缓存，以沿序列维度组织束。这允许多个束共享单个编码器键值对缓存，消除冗余内存访问，并将每步键值对读取复杂度从O(B·L)降低到O(L)。对beam search引入TopK预切割，它首先并行地从上一步骤的每个束中选择k个候选项，然后在聚合候选项上进行全局Top-k选择。将数值精度从FP32降低到FP8。
+![](/img/wechat/0ae7d3d5-508a-4fab-a5f7-e52e151a6e9d-b79e2d.png)
 
-# 4 实验
+线上部署只在广告业务，作为一路召回，90%的召回都是来自这一路。线上效果：
 
-没看到离线指标，只有业务指标。相比onerec-v2有很大提升：
+![](/img/wechat/2fe39ddf-9a74-4e59-9953-710d0efe6ee2-d89991.png)
 
-![](/img/wechat/0674c064-b24f-424c-88c8-66e9e4555cfe-d6ca9f.png)
+这篇文章其实没啥技术增量，可能是小红书太适合llm落地了！

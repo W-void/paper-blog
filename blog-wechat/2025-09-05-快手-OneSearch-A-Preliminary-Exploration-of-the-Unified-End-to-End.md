@@ -4,102 +4,141 @@ date: 2025-09-05
 tags: [公众号]
 ---
 
+[OneSearch: A Preliminary Exploration of the Unified End-to-End Generative Framework for E-commerce Search](https://arxiv.org/pdf/2509.03236)
 
+![](/img/wechat/7d3e2742-083e-4b08-8180-6c15216beec6-bdf6e8.png)
 
-![](/img/wechat/f2f2864c-6af2-479b-83f4-6d702adf6189-881ccc.png)
-Generative Recommendation for Large-Scale Advertising
-https://arxiv.org/pdf/2602.22732
+之前介绍过快手的OneSug，这次同一团队又出品了OneSearch，相似的业务背景、方法思想、行文结构，联合食用更佳。
 
-广告和推荐的核心区别是什么？排序公式多了个收入项？保证激励兼容的拍卖机制？考虑广告主意志的动态出价？来看看快手给出的广告的生成式方案。
+本文模型的主体结构和OneRec类似，其他部分提出了很多搜索业务的方案，而且这篇文章给出的细节非常多，还是建议阅读原文。
+![](/img/wechat/b4ebbe08-dc58-423a-a287-f1b199ae0f21-dacadf.png)
 
+快手现在有自然场景的OneRec、本地场景的OneLoc、推荐词场景的OneSug、搜索场景的OneSearch，还缺啥场景？（商业化？广告可以先看美团的EGA）
 
+生成式在搜广推也是越来越火热了，但今天看到了seed增发期权的消息，只能自嘲：“垃圾搜广推别来蹭我们大模型的热度了”😭😭😭
 
 # 1 背景
 
-本文给出广告生成式的三个核心挑战：
 
-1. **Advertisement Tokenization**。除了item本身的多模态语义信息，还要考虑广告账户的信息。比如同一个item，广告主A出价比广告主B高，A的优先级就要比B高。还有广告类型，比如短视频广告、商品广告、直播广告。
+![](/img/wechat/a23733c8-960d-4e18-a62b-da4ca9f21d80-45816e.png)
 
-2. **Learning Paradigm**。需要考虑业务目标（如广告收入ecpm）和列表级指标。
+![](/img/wechat/b46b3fd4-eba0-43ec-bb36-31f712b375c5-843c4f.png)
 
-3. **Real-Time Serving**。实时serving，比如广告主预算花完了、或者投放效果不及预期导致出价降低，要实时感知到（广告的SID要实时变）。
+本文是快手电商搜索场景，有几个关键的挑战：
 
-对应的，针对上面三个挑战，本文的方法包含三个部分：
+1. 搜索query的相关性约束。查询通常由2-3个简短的关键词组成，任何属性的不匹配都可能导致显著的相关性问题。尽管基于语义ID的GR模型可以构建项目的层次化、可学习的表示，但它们不可避免地会导致核心属性表示的丢失，因为它们倾向于学习相同SID下的共享信息。
+2. item信息有两个特性：1）信息冗余，卖家经常添加无关的关键词来增加曝光率。2）项目描述中的语义顺序较弱。重要信息如品牌名称、属性、词汇和类别通常不考虑位置出现在文本中。
+3. 挖掘用户兴趣挑战。当用户输入简洁的查询或搜索一个全新的类别时，有效结合查询内容与用户行为档案以推断用户的真实搜索意图至关重要。（但我觉得在挖掘用户兴趣这一点上，搜索比推荐有优势，起码用户提供了query）
 
-1. **统一的广告SID（UA-SID）**。基于RQ-Kmeans的改进。
-
-2. **增加一个ecpm的预估项**。并提出list-wise RL（RSPO）。
-
-3. **LazyAR加快自回归解码速度**。和我前面理解的不一样，可能快手的广告主有钱，预算花不完所以广告候选比较稳定。
 
 # 2 方法
 
-## 2.1 Unified Advertisement Semantic ID
 
-快手这个是广告的统一生成式模型，所以需要给不同类型的异构广告编码到统一SID空间中。
+![](/img/wechat/05f55484-5002-44c3-a19d-92a74379f30d-411804.png)
 
+模型分为4个部分：SID、多视角行为序列、模型结构（encoder-decoder）、偏好对齐。
 
-![](/img/wechat/4cac5736-f10e-4497-b7bf-ff65d8d21aea-87fd2b.png)
+# 2.1 SID
 
+![](/img/wechat/b6d1bf5b-b04c-4c36-bfd2-5f7a955d5c4c-ca19de.png)
 
-1. 设计了6个模版针对不同的广告，输入llm中得到语义向量。
+1. 语意向量生成。和OneSug一样，先用BGE语言模型生成query和item的初始emb。然后进行语意对齐，损失有: i2i、q2q、q2i的对比损失、q2i的margin loss 和 难样本的相关性loss，相关性标签由LLM得到。
+  ![](/img/wechat/0cb23bde-41b4-4036-9a75-cee11216d376-99b7f1.png)
+2. 语意向量增强。item的文本往往会有一些和item无关但能加曝光度的一些文本，比如OneSug用相关query对prefix进行增强，本文用top keyward对item的keyward进行增强。具体来说，提取了18种keyward类型，每种类型的keyward都选择pv最高的几个组成core keyword表，然后进行增强。
+  ![](/img/wechat/8ea0421f-46f3-4dec-ab58-782916ceedf4-1662e3.png)
+3. 语意ID生成。RQ-Kmeans提取共性表征，但丢失了最后一层的残差，作者认为这是每个item的特性（其实特性和噪声往往很难分清，因为作者前面做了很多增强的操作，所以这里特性多而噪声偏少吧），所以作者保留了最后一层残差，并用OPQ提取特性表征。OPQ就是乘积量化，用两个额外的SID量化最后一层的残差。
+  
+作者做了实验，独立编码率（ICR）有明显的提升：
+![](/img/wechat/399336e6-15b4-451f-bb6c-c6af9bbc14d2-b60f56.png)
 
-2. 引入协同信息，用对比损失拉近/远正负样本：
-![](/img/wechat/bf9ca926-91a1-4224-a0f8-c62a7a41d87f-b5a34f.png)
+而且这个OPQ好像只适合量化最后一层的残差，用OPQ替代前面的RQ-Kmeans，效果下降很明显。
+![](/img/wechat/0d68b49e-d733-4514-a14f-54e65dd2939a-126023.png)
 
-3. 多粒度多分辨率(MGMR)RQ-Kmeans。多分辨率（MR）体现在：较低层级使用较大的码本尽早捕捉主导因素，而较高层级则对低熵残差进行建模。多粒度（MG）体现在：直接把最后一层用广告信息硬编码，而非语义信息。
+## 2.2 多视角行为序列
 
-意思是说，广告有很多规则类的特征，需要直接编码进SID。
+![](/img/wechat/e2d3dfce-7c2c-4506-a33a-bed213cd0c0e-9b4047.png)
 
-## 2.2 Lazy Autoregressive Decoder
+1. 用户SID。 由长短序列提取，长度为m的短期点击序列、长度为n的长期下单序列，再加上一个时间衰减系数，所以用户SID的长度为10：
+  ![](/img/wechat/69dcdc40-8663-4131-ae52-17e7326c2f06-2a80c4.png)
+对于新用户或冷启动用户，行为序列不是很长，根据query-item出现次数统计每个查询的点击最多的项目，按pv降序排列作为默认的行为序列。
+2. 短期行为直接输入下游模型。这里用到了滑动窗口对短期行为序列进行数据增强。
+3. 长期行为，包括点击行为、下单行为、搜索相关行为，经过3层RQ编码后，对每一层RQ聚合，再做QFormer，得到长期行为表征，输入到下游模型中：
+  ![](/img/wechat/e25ae4bb-49ce-44bb-becd-995da7d7c49f-39524e.png)
 
-一个图就清晰了，改串行为并行，只有最后一层是串行的。
+## 2.3 模型结构
 
-![](/img/wechat/0377e96a-4014-4e93-844f-a3e992477bda-46d66d.png)
+encoder-decoder结构，样本组织形式也和onerec类似。输入包括前面提取的：用户SID、query和对应的query SID、显式的用户短期行为、提取后的用户长期行为、用户属性特征。
+![](/img/wechat/b4ebbe08-dc58-423a-a287-f1b199ae0f21-dacadf.png)
 
-感觉和虾皮onepiece里提到的隐式推理加速有点像，推理加速应该是llm一大子方向。
-
-## 2.3 Value-Aware Supervised Learning
-![](/img/wechat/faad9f01-b9ac-4cd7-a6aa-5c0c12013183-7f9c6f.png)
-
-在ntp 任务的基础上，增加了一个ecpm生成，对ecpm进行等频分桶（equiprobable buckets）。
-![](/img/wechat/e646e5a7-3c0f-43f6-b966-cc42e0788753-db81f7.png)
-
-（这个ecpm的label应该和onerec一样，由判别式精排模型输出。那generator推全后，还需要离线用evaluator评估一次吗？）
-
-- 对不同行为施加不同的loss权重，这都是小trick了。
-
-然后对LazyAR并行的部分增加一个辅助的MTP loss，让并行部分直接生成target token而不依赖串行的结果：
-
-![](/img/wechat/9dbc04de-34fa-4309-815a-b64cbe044d79-dc186f.png)
-
-## 2.4 Ranking-Guided Reinforcement Learning
-
-最后还是得加一个强化，对齐业务、并实现可控的探索。
-
-RSPO (RankingGuided Softmax Preference Optimization)：列表级优化，这个损失和NDCG很像。
-
-公式如下，意思是，如果j的ecpm比i的ecpm低，且j的生成概率比i大，那就施加一个和排名（i、j）相关的惩罚。
-（所以样本肯定也是请求粒度的，不知道有没有包含未曝光样本）
-![](/img/wechat/dc2b8237-4b3b-453e-a08f-3598b9269bd8-0285d0.png)
-
-作者证明，这个loss就是NDCGcost的上界。
+## 2.4 偏好对齐
 
 
-作者将VSL视为学习用户兴趣项目上的稳定基础分布，而RSPO通过偏向生成更高价值的项目来完善这一分布，同时不偏离用户相关性。
+![](/img/wechat/f38f2f1a-232a-49c8-955b-3858e7350331-2c2f41.png)
 
-# 3 效率优化
+相比于推荐，搜索需要多考虑相关性对齐。设计了多阶段SFT和自适应奖励系统。
 
-作者还提出了一些效率优化方案：
+**多阶段SFT。**
 
-1. 动态beam search。本文的beam search数量不是均匀的，而是每层递增。然后高峰期降低。
+不像OneRec上来就是模型结构，因为本文OneSearch的阶段很多，所以提出了对多个阶段都SFT。（什么？有种感觉，one model 将原来的“漏斗多阶段”变成的另一种多阶段😂）
 
-2. 结果缓存。在一定时间间隔（例如，一分钟）内的请求直接重用缓存的结果。
+1. 语义内容对齐：设置了三个子任务：（a）将query/item文本作为prompt输入，然后输出相应的SID。（b）以SID为输入并生成原始query/item文本。（c）输入query/item 文本，输出相应的类别信息。前两个任务旨在使SID和文本内容对齐，而类别预测可确保相关性。
+2. 共现同步：做query和item之间的相互预测以及query SID和item SID的相互预测。
+3. 用户个性化建模：就是NTP loss。
 
-3. 其他优化。提出束共享键值对缓存，以沿序列维度组织束。这允许多个束共享单个编码器键值对缓存，消除冗余内存访问，并将每步键值对读取复杂度从O(B·L)降低到O(L)。对beam search引入TopK预切割，它首先并行地从上一步骤的每个束中选择k个候选项，然后在聚合候选项上进行全局Top-k选择。将数值精度从FP32降低到FP8。
+**自适应奖励系统。**
 
-# 4 实验
+和OneRec-v2一样，OneSearch也直接用用户行为作为reward，但在训练样本采样和训练范式上有差别。
 
-没看到离线指标，只有业务指标。相比onerec-v2有很大提升：
+1. 自适应加权奖励信号。
 
-![](/img/wechat/0674c064-b24f-424c-88c8-66e9e4555cfe-d6ca9f.png)
+![](/img/wechat/cc072e9c-14a3-4d27-ae83-be5e847a3a7b-c45f53.png)
+
+和OneSug一样，将用户行为分为6个等级。
+![](/img/wechat/5ebaa412-aeea-407f-b3c7-d6ee23640684-c3f6bf.png)
+
+reward要综合考虑曝光、点击、下单，计算公式为：
+![](/img/wechat/a62d9fbe-cd6e-4121-a8fc-056ffbe6445c-63529c.png)
+
+2. 奖励模型训练。
+
+![](/img/wechat/308ec782-de11-4230-9862-a5eb69281e61-d2e0e6.png)
+
+OneRec-V1的采样可能会导致有偏，OneRec-V2采用GRPO及其变体（例如ECPO、GBPO）也会引入更多无关的SID。因此本文提出了一个基于SIM的三塔框架，三个塔分别学习CTR、CVR和CTCVR（使用二元交叉熵损失）。最终偏好分数的计算方式为：
+![](/img/wechat/828b9733-de5c-46b5-b933-6f4d71e1e0ce-886949.png)
+
+这个三塔模型相当于是精排模型的蒸馏版，省去了替换精排“老汤”模型的麻烦。特征和OneSearch保持一致，并且增加了一部分推荐场景用户同品类的正样本。
+
+**因为OneSearch的场景是电商场景，所以可以过滤掉没有正行为的pv，做下面的list-wise DPO，再加上蒸馏精排模型，实现全样本训练。**
+
+# 3 实验
+
+离线实验：
+![](/img/wechat/52c6f9fc-1f07-42f2-8f1a-4db9cabe1476-93c28a.png)
+
+在线实验：
+![](/img/wechat/2b2841c7-e440-422d-8b5b-203fb17c3585-681aa4.png)
+
+MFU从3.26%提升到27.32%，推理成本（operational expenditure，OPEX）下降了75.4%！
+![](/img/wechat/b846be6d-56bc-4633-ad63-584dd5a4969f-41aabc.png)
+
+而且不像OneRec-v2对冷启物料不友好，OneSearch对长尾query仍然有效！
+![](/img/wechat/43d9dea9-09f2-410a-9714-3789438149f5-e95b70.png)
+
+![](/img/wechat/df6e6256-150f-4a62-b911-e182b7aeb8b1-0d3336.png)
+
+
+# 4 更多分析
+
+**1. OneSearch模型在线收益的主要方面是什么？**
+
+如图8所示，本文计算了前30个行业的点击率（CTR）相对增益，30个行业中有28个经历了增长，平均增幅为2.49%。本文按流行度分为三类：top（pv〉1000）、middle（100<pv<1000）和long-tail（pv<100），如表10所示，OneSearch模型提升了所有类别的查询效果。
+
+**2. OneSearch是否具有更强的推理能力？**
+
+这个作者主要通过case来判断。例如，一位之前搜索过“情侣运动鞋”和“情人节礼物”的女性用户在搜索“银戒指”时，很可能是在寻找一对戒指送给自己和伴侣。作者在真实日志中观察到，只有OneSearch呈现了相关产品，最终被用户购买。
+
+在传统的电子商务搜索场景中，排名模型通常涉及数千个特征，它们的组合可能会掩盖一些关键属性。此外，该模型结构通常由简单的浅层神经网络堆栈组成，导致其推理能力极弱。而OneSearch则利用用户的长期和短期序列信息来识别他们的潜在兴趣，并通过transformer结构的注意力机制增强对用户搜索意图的推断。
+
+**3. OneSearch将来会考虑哪些优化点？**
+
+作者会探索实时在线的tokenization，旨在通过单一生成模型实现统一的编码和推理，从而减少离线编码与流式训练之间的差距。此外，通过更强大的强化学习来对齐用户偏好，并为item整合多模态特征（如图像和视频），可以进一步提升OneSearch的推理能力。

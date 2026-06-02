@@ -4,102 +4,66 @@ date: 2025-08-17
 tags: [公众号]
 ---
 
+[DAS: Dual-Aligned Semantic IDs Empowered Industrial Recommender System](https://arxiv.org/pdf/2508.10584)
 
 
-![](/img/wechat/f2f2864c-6af2-479b-83f4-6d702adf6189-881ccc.png)
-Generative Recommendation for Large-Scale Advertising
-https://arxiv.org/pdf/2602.22732
+![](/img/wechat/8d37a693-60c9-449f-92e5-56a7a0ab39ed-7fa860.png)
 
-广告和推荐的核心区别是什么？排序公式多了个收入项？保证激励兼容的拍卖机制？考虑广告主意志的动态出价？来看看快手给出的广告的生成式方案。
+如果说NTP落地到推荐系统中的姿势还有待商榷，那利用LLM的世界知识生成sid应用到下游任务中应该是无可争议的。
 
+既然涉及到下游任务，那么和下游任务的对齐一定是研究重点。前有快手QRAM利用sid实现llm的近似端到端应用，但仍有较大改进空间。要和下游任务对齐，一个最简单的想法就是：对齐下游任务的u2p label和loss。
 
+就在笔者的论文正在撰写中时，看到了快手这篇文章，现在生成式太容易撞idea了！
 
 # 1 背景
 
-本文给出广告生成式的三个核心挑战：
+llm生成的语义ID与下游基于协同过滤的推荐任务之间的一致目标固有偏差长期以来一直是行业内的一个关键挑战.
 
-1. **Advertisement Tokenization**。除了item本身的多模态语义信息，还要考虑广告账户的信息。比如同一个item，广告主A出价比广告主B高，A的优先级就要比B高。还有广告类型，比如短视频广告、商品广告、直播广告。
+目前的对齐机制可以分为两类：
+1. CF first：下图2（a），我理解就是像CLIP那样，多模态emb对齐；
+2. Alignment First：下图2（b），像QRAM那样，在量化之前，使用一个训练有素的CF模型对多模态内容表示进行对齐。
+![](/img/wechat/277c89d1-7ae1-4f86-a8d2-626c6c25dbce-02bc99.png)
 
-2. **Learning Paradigm**。需要考虑业务目标（如广告收入ecpm）和列表级指标。
-
-3. **Real-Time Serving**。实时serving，比如广告主预算花完了、或者投放效果不及预期导致出价降低，要实时感知到（广告的SID要实时变）。
-
-对应的，针对上面三个挑战，本文的方法包含三个部分：
-
-1. **统一的广告SID（UA-SID）**。基于RQ-Kmeans的改进。
-
-2. **增加一个ecpm的预估项**。并提出list-wise RL（RSPO）。
-
-3. **LazyAR加快自回归解码速度**。和我前面理解的不一样，可能快手的广告主有钱，预算花不完所以广告候选比较稳定。
 
 # 2 方法
 
-## 2.1 Unified Advertisement Semantic ID
+![](/img/wechat/cb5140cb-2a40-4d8e-85ac-eaa727114e46-bc5559.png)
 
-快手这个是广告的统一生成式模型，所以需要给不同类型的异构广告编码到统一SID空间中。
+1. 用LLM生成用户和item的语义emb；
+2. 分别量化用户和item的语义emb，生成语义ID，loss为重构损失+聚类损失：
+![](/img/wechat/11606f37-8bfe-46b6-8b46-be7dc0819376-9a41ee.png)
+3. 协同损失，作者这里还考虑了流行度偏差。具体来说，就是将用户无偏兴趣表示$c_u^{int}$与用户的从众表示$c_u^{con}$分离，将广告内容无偏表示$c_i^{pro}$与广告的流行度表示$c_i^{pop}$分离。这4个都是基于用户/item的ID特征得到的。
+loss如下，其中$c_i^p$表示item真实的流行度表示，$c_u^c$表示用户真实的从众表示。这两个是基于流行度特征得到的（比如：曝光数、点击数）
 
-
-![](/img/wechat/4cac5736-f10e-4497-b7bf-ff65d8d21aea-87fd2b.png)
-
-
-1. 设计了6个模版针对不同的广告，输入llm中得到语义向量。
-
-2. 引入协同信息，用对比损失拉近/远正负样本：
-![](/img/wechat/bf9ca926-91a1-4224-a0f8-c62a7a41d87f-b5a34f.png)
-
-3. 多粒度多分辨率(MGMR)RQ-Kmeans。多分辨率（MR）体现在：较低层级使用较大的码本尽早捕捉主导因素，而较高层级则对低熵残差进行建模。多粒度（MG）体现在：直接把最后一层用广告信息硬编码，而非语义信息。
-
-意思是说，广告有很多规则类的特征，需要直接编码进SID。
-
-## 2.2 Lazy Autoregressive Decoder
-
-一个图就清晰了，改串行为并行，只有最后一层是串行的。
-
-![](/img/wechat/0377e96a-4014-4e93-844f-a3e992477bda-46d66d.png)
-
-感觉和虾皮onepiece里提到的隐式推理加速有点像，推理加速应该是llm一大子方向。
-
-## 2.3 Value-Aware Supervised Learning
-![](/img/wechat/faad9f01-b9ac-4cd7-a6aa-5c0c12013183-7f9c6f.png)
-
-在ntp 任务的基础上，增加了一个ecpm生成，对ecpm进行等频分桶（equiprobable buckets）。
-![](/img/wechat/e646e5a7-3c0f-43f6-b966-cc42e0788753-db81f7.png)
-
-（这个ecpm的label应该和onerec一样，由判别式精排模型输出。那generator推全后，还需要离线用evaluator评估一次吗？）
-
-- 对不同行为施加不同的loss权重，这都是小trick了。
-
-然后对LazyAR并行的部分增加一个辅助的MTP loss，让并行部分直接生成target token而不依赖串行的结果：
-
-![](/img/wechat/9dbc04de-34fa-4309-815a-b64cbe044d79-dc186f.png)
-
-## 2.4 Ranking-Guided Reinforcement Learning
-
-最后还是得加一个强化，对齐业务、并实现可控的探索。
-
-RSPO (RankingGuided Softmax Preference Optimization)：列表级优化，这个损失和NDCG很像。
-
-公式如下，意思是，如果j的ecpm比i的ecpm低，且j的生成概率比i大，那就施加一个和排名（i、j）相关的惩罚。
-（所以样本肯定也是请求粒度的，不知道有没有包含未曝光样本）
-![](/img/wechat/dc2b8237-4b3b-453e-a08f-3598b9269bd8-0285d0.png)
-
-作者证明，这个loss就是NDCGcost的上界。
+![](/img/wechat/050e5a00-238f-4d6f-86db-5e6654229ad9-68f347.png)
 
 
-作者将VSL视为学习用户兴趣项目上的稳定基础分布，而RSPO通过偏向生成更高价值的项目来完善这一分布，同时不偏离用户相关性。
+![](/img/wechat/b0eaae0e-c47c-462c-a886-80dc19195c6d-8a12f5.png)
 
-# 3 效率优化
+4. 最关键的对齐方式。
 
-作者还提出了一些效率优化方案：
+- u2i损失：user无偏和item无偏各来一次。
 
-1. 动态beam search。本文的beam search数量不是均匀的，而是每层递增。然后高峰期降低。
+![](/img/wechat/0515c933-c3a7-4375-9c61-c3ee9fa1d2af-f238ff.png)
 
-2. 结果缓存。在一定时间间隔（例如，一分钟）内的请求直接重用缓存的结果。
+![](/img/wechat/664a65e7-32f5-4702-aa2a-6c1fe9b10d04-71d6d4.png)
 
-3. 其他优化。提出束共享键值对缓存，以沿序列维度组织束。这允许多个束共享单个编码器键值对缓存，消除冗余内存访问，并将每步键值对读取复杂度从O(B·L)降低到O(L)。对beam search引入TopK预切割，它首先并行地从上一步骤的每个束中选择k个候选项，然后在聚合候选项上进行全局Top-k选择。将数值精度从FP32降低到FP8。
+- u2u和i2i损失：
 
-# 4 实验
+![](/img/wechat/c68f1235-37c1-4914-a735-5c534876995e-d09809.png)
 
-没看到离线指标，只有业务指标。相比onerec-v2有很大提升：
+![](/img/wechat/b4996269-47b2-431d-b5c4-119dcf183ffc-233d7b.png)
 
-![](/img/wechat/0674c064-b24f-424c-88c8-66e9e4555cfe-d6ca9f.png)
+（说实话，有点繁琐。）
+
+# 3 实验
+
+离线实验：指标是下游任务的auc，看上去去偏效果还挺大的。
+
+![](/img/wechat/667321f7-034b-4a8e-abf9-6d5d33df77b4-105476.png)
+
+sid应用在生成式任务上也是又提升的：
+![](/img/wechat/54387e74-51f1-4311-9f1b-2b8eafebb7a9-242e65.png)
+
+在线实验：
+判别模型和生成模型上的eCPM分别提升2.69%/0.79%。
