@@ -19,6 +19,7 @@ const config: Config = {
     format: 'md',
     hooks: {
       onBrokenMarkdownLinks: 'warn',
+      onBrokenMarkdownImages: 'warn',
     },
   },
 
