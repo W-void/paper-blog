@@ -1,6 +1,8 @@
 import {themes as prismThemes} from 'prism-react-renderer';
 import type {Config} from '@docusaurus/types';
 import type * as Preset from '@docusaurus/preset-classic';
+import remarkMath from 'remark-math';
+import rehypeKatex from 'rehype-katex';
 
 const config: Config = {
   title: 'W-void 的技术笔记',
@@ -39,6 +41,8 @@ const config: Config = {
           path: 'blog-papers',
           routeBasePath: 'papers',
           showReadingTime: true,
+          remarkPlugins: [remarkMath],
+          rehypePlugins: [rehypeKatex],
           blogTitle: '最近精读',
           blogDescription: '推荐系统、LLM、自监督学习、AI 科研自动化方向的论文精读记录',
           postsPerPage: 10,
@@ -69,6 +73,8 @@ const config: Config = {
         path: 'blog-wechat',
         routeBasePath: 'wechat',
         showReadingTime: true,
+        remarkPlugins: [remarkMath],
+        rehypePlugins: [rehypeKatex],
         blogTitle: '公众号',
         blogDescription: '公众号文章存档',
         postsPerPage: 10,
@@ -92,6 +98,8 @@ const config: Config = {
         path: 'blog-arxiv',
         routeBasePath: 'arxiv',
         showReadingTime: false,
+        remarkPlugins: [remarkMath],
+        rehypePlugins: [rehypeKatex],
         blogTitle: 'arXiv 日报',
         blogDescription: '每日 arXiv 论文速览',
         postsPerPage: 10,
@@ -107,6 +115,15 @@ const config: Config = {
         onUntruncatedBlogPosts: 'ignore',
       },
     ],
+  ],
+
+  stylesheets: [
+    {
+      href: 'https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css',
+      type: 'text/css',
+      integrity: 'sha384-nB0miv6/jRmo5UMMR1wu3Gz6NLsoTkbqJghGIsx//Rlm+ZU03BU6SQNC66uf4l5+',
+      crossorigin: 'anonymous',
+    },
   ],
 
   themeConfig: {
