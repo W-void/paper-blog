@@ -1,0 +1,227 @@
+推荐系统:
+  label: 推荐系统
+  description: 工业推荐系统相关论文
+
+CTR预估:
+  label: CTR 预估
+  description: 点击率预估模型
+
+生成式推荐:
+  label: 生成式推荐
+  description: 基于生成模型的推荐系统
+
+Semantic-ID:
+  label: Semantic ID
+  description: 语义 ID 量化与生成式推荐
+
+推荐Scaling:
+  label: 推荐 Scaling
+  description: 推荐系统规模化与 embedding collapse
+
+有效秩:
+  label: 有效秩
+  description: 有效秩（Effective Rank）在推荐与 LLM 中的应用
+
+用户兴趣建模:
+  label: 用户兴趣建模
+  description: 长期/短期用户行为序列建模
+
+长期用户历史:
+  label: 长期用户历史
+  description: 超长用户历史建模
+
+RAG推荐:
+  label: RAG 推荐
+  description: 检索增强生成用于推荐系统
+
+推荐重排序:
+  label: 推荐重排序
+  description: 推荐系统重排序阶段
+
+生成式重排序:
+  label: 生成式重排序
+  description: 基于生成模型的重排序
+
+召回排序统一:
+  label: 召回排序统一
+  description: 召回与排序阶段的统一建模
+
+搜索排序:
+  label: 搜索排序
+  description: 搜索相关性排序
+
+长尾问题:
+  label: 长尾问题
+  description: 推荐系统中的长尾内容问题
+
+量化学习:
+  label: 量化学习
+  description: 向量量化与离散表示学习
+
+碰撞问题:
+  label: 碰撞问题
+  description: Semantic ID 碰撞问题
+
+评估方法论:
+  label: 评估方法论
+  description: 推荐系统评估指标与方法论
+
+LLM:
+  label: LLM
+  description: 大语言模型
+
+Transformer架构:
+  label: Transformer 架构
+  description: Transformer 模型架构创新
+
+残差连接:
+  label: 残差连接
+  description: 深度网络残差连接
+
+注意力机制:
+  label: 注意力机制
+  description: 注意力机制
+
+生成模型:
+  label: 生成模型
+  description: 生成模型（扩散、Flow Matching 等）
+
+Flow-Matching:
+  label: Flow Matching
+  description: Flow Matching 生成模型
+
+语言模型:
+  label: 语言模型
+  description: 语言模型
+
+扩散模型:
+  label: 扩散模型
+  description: 扩散模型
+
+LLM知识融合:
+  label: LLM 知识融合
+  description: 将 LLM 世界知识融入推荐系统
+
+个性化:
+  label: 个性化
+  description: 个性化推荐与建模
+
+约束优化:
+  label: 约束优化
+  description: 约束优化方法
+
+LLM评估:
+  label: LLM 评估
+  description: 大语言模型评估方法
+
+信息论:
+  label: 信息论
+  description: 信息论在机器学习中的应用
+
+表示学习:
+  label: 表示学习
+  description: 表示学习与 embedding
+
+灾难性遗忘:
+  label: 灾难性遗忘
+  description: 持续学习中的灾难性遗忘问题
+
+AI科研自动化:
+  label: AI 科研自动化
+  description: 自动化科研系统
+
+多智能体:
+  label: 多智能体
+  description: 多智能体系统
+
+代码生成:
+  label: 代码生成
+  description: 代码生成与自动编程
+
+Agentic系统:
+  label: Agentic 系统
+  description: 基于 LLM 的 Agentic 系统设计
+
+多Agent架构:
+  label: 多 Agent 架构
+  description: 多 Agent 协作架构
+
+LLM工程:
+  label: LLM 工程
+  description: LLM 工程实践
+
+Agent工程:
+  label: Agent 工程
+  description: Agent 系统工程实践
+
+Claude-Code:
+  label: Claude Code
+  description: Claude Code 架构与实现
+
+上下文压缩:
+  label: 上下文压缩
+  description: LLM 上下文压缩技术
+
+记忆系统:
+  label: 记忆系统
+  description: Agent 记忆系统设计
+
+embedding-collapse:
+  label: Embedding Collapse
+  description: Embedding 秩坍塌问题
+
+多任务学习:
+  label: 多任务学习
+  description: 多任务联合学习
+
+广告系统:
+  label: 广告系统
+  description: 工业广告系统
+
+长期行为序列:
+  label: 长期行为序列
+  description: 用户长期行为序列建模
+
+工业推荐:
+  label: 工业推荐
+  description: 工业级推荐系统落地
+
+串联解读:
+  label: 串联解读
+  description: 多篇论文串联解读
+
+自监督学习:
+  label: 自监督学习
+  description: 自监督表示学习
+
+对比学习:
+  label: 对比学习
+  description: 对比学习方法
+
+聚类:
+  label: 聚类
+  description: 聚类方法
+
+视觉表示:
+  label: 视觉表示
+  description: 视觉表示学习
+
+Vision-Transformer:
+  label: Vision Transformer
+  description: Vision Transformer（ViT）
+
+self-distillation:
+  label: Self-Distillation
+  description: 自蒸馏方法
+
+涌现属性:
+  label: 涌现属性
+  description: 模型涌现属性
+
+稠密监督:
+  label: 稠密监督
+  description: 稠密监督信号
+
+统一建模:
+  label: 统一建模
+  description: 多任务/多阶段统一建模

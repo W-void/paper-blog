@@ -1,0 +1,68 @@
+/**
+ * 论文精读博客 - 全局样式
+ * 主色调：深蓝紫（学术感）
+ */
+
+:root {
+  --ifm-color-primary: #3b5bdb;
+  --ifm-color-primary-dark: #3451c7;
+  --ifm-color-primary-darker: #3149bb;
+  --ifm-color-primary-darkest: #283c9a;
+  --ifm-color-primary-light: #4263eb;
+  --ifm-color-primary-lighter: #4c6ef5;
+  --ifm-color-primary-lightest: #748ffc;
+  --ifm-code-font-size: 92%;
+  --docusaurus-highlighted-code-line-bg: rgba(0, 0, 0, 0.08);
+  --ifm-font-family-base: -apple-system, BlinkMacSystemFont, 'PingFang SC',
+    'Hiragino Sans GB', 'Microsoft YaHei', 'Segoe UI', sans-serif;
+  --ifm-heading-font-weight: 600;
+  --ifm-line-height-base: 1.8;
+}
+
+[data-theme='dark'] {
+  --ifm-color-primary: #748ffc;
+  --ifm-color-primary-dark: #5c7bf9;
+  --ifm-color-primary-darker: #4f71f8;
+  --ifm-color-primary-darkest: #2450f5;
+  --ifm-color-primary-light: #8ca3fd;
+  --ifm-color-primary-lighter: #99adfd;
+  --ifm-color-primary-lightest: #c5cfff;
+  --docusaurus-highlighted-code-line-bg: rgba(0, 0, 0, 0.3);
+}
+
+/* 博客文章正文排版优化 */
+.markdown {
+  font-size: 16px;
+  line-height: 1.85;
+}
+
+.markdown h2 {
+  margin-top: 2.5rem;
+  padding-bottom: 0.4rem;
+  border-bottom: 2px solid var(--ifm-color-primary-lightest);
+}
+
+.markdown h3 {
+  margin-top: 2rem;
+}
+
+/* 代码块 */
+.markdown pre {
+  border-radius: 8px;
+}
+
+/* 博客列表页标签样式 */
+.tag_zVej {
+  border-radius: 4px;
+}
+
+/* 文章元信息（日期、阅读时间）字体稍小 */
+.blogPostInfo {
+  font-size: 0.85rem;
+  opacity: 0.75;
+}
+
+/* 侧边栏 */
+.blogSidebarItem {
+  font-size: 0.9rem;
+}
