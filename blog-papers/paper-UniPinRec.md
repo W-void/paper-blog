@@ -11,32 +11,20 @@ authors: wangshuli
 description: "Pinterest | 博导判决：👌 Weak Accept"
 ---
 
-import PaperBanner from '@site/src/components/PaperBanner';
-import PaperCard from '@site/src/components/PaperCard';
-import QuoteBlock from '@site/src/components/QuoteBlock';
-import TechBlock from '@site/src/components/TechBlock';
-import SummaryBox from '@site/src/components/SummaryBox';
-import NoticeBox from '@site/src/components/NoticeBox';
-import CompareGrid from '@site/src/components/CompareGrid';
+## 关键指标
 
-<PaperBanner
-  label="工业推荐系统 · 2026"
-  title="一个模型，同时做召回和排序"
-  subtitle="Pinterest UniPinRec：全栈统一的四个维度"
-  metrics={[
-    { num: '+0.95%', label: '线上互动率', color: 'green' },
-    { num: '−11.1%', label: '端到端延迟', color: 'red' },
-    { num: '+63.6%', label: 'QPS 提升', color: 'green' },
-    { num: '3.92×', label: '排序加速', color: 'blue' },
-  ]}
-/>
+| 指标 | 数值 |
+|------|------|
+| 线上互动率 | **+0.95%** |
+| 端到端延迟 | **−11.1%** |
+| QPS 提升 | **+63.6%** |
+| 排序加速 | **3.92×** |
 
-<PaperCard
-  title="UniPinRec: A Unified Retrieval and Ranking Model for Pinterest Recommendation"
-  org="Pinterest"
-  date="2026 年 5 月（arXiv 预印本）"
-  link="arxiv.org/abs/2606.00422"
-/>
+> **论文**：UniPinRec: A Unified Retrieval and Ranking Model for Pinterest Recommendation  
+> **机构**：Pinterest  
+> **时间**：2026 年 5 月（arXiv 预印本）
+
+---
 
 ## 缺口
 
@@ -46,36 +34,37 @@ import CompareGrid from '@site/src/components/CompareGrid';
 
 缺口在于：**能不能在不替换现有 pipeline 的前提下，真正统一输入格式、模型、训练和 serving 四个维度？**
 
+---
+
 ## 增量
 
-<CompareGrid
-  oldLabel="之前"
-  newLabel="UniPinRec"
-  oldContent="检索和排序共享架构但分别训练、分别部署，用户历史编码做两遍，参数量和计算量双倍。"
-  newContent="一个 backbone、一种输入格式、一次训练、一套 serving，KV-cache 跨阶段复用让排序变成检索的「增量解码」。"
-/>
+**之前**：检索和排序共享架构但分别训练、分别部署，用户历史编码做两遍，参数量和计算量双倍。
+
+**UniPinRec**：一个 backbone、一种输入格式、一次训练、一套 serving，KV-cache 跨阶段复用让排序变成检索的"增量解码"。
 
 线上结果：BMI saves +0.95%、notification saves +3.84%，-11.1% 延迟，+63.6% QPS。
 
+---
+
 ## 白话方法：一次考试答两张卷
 
-<QuoteBlock label="大白话">
-想象你参加一场考试，试卷分两部分：第一部分是"从 100 万道题里选出最相关的 1000 道"（检索），第二部分是"把这 1000 道题按重要性排序"（排序）。传统做法是让你读两遍课本、做两遍笔记、分别答两张卷。UniPinRec 的做法是：你只读一遍课本（编码用户历史），做一份笔记（KV cache），然后用同一份笔记先答第一张卷（ANN 检索），再答第二张卷（cross-attention 排序）。
-</QuoteBlock>
+> **大白话**：想象你参加一场考试，试卷分两部分：第一部分是"从 100 万道题里选出最相关的 1000 道"（检索），第二部分是"把这 1000 道题按重要性排序"（排序）。传统做法是让你读两遍课本、做两遍笔记、分别答两张卷。UniPinRec 的做法是：你只读一遍课本（编码用户历史），做一份笔记（KV cache），然后用同一份笔记先答第一张卷（ANN 检索），再答第二张卷（cross-attention 排序）。
 
 具体来说，三个关键设计让这成为可能：
 
-<TechBlock title="Masked Action Modeling (MAM)">
+### Masked Action Modeling (MAM)
+
 传统做法（HSTU）把 action token 交错插入 item 之间，序列长度翻倍，检索和排序的输入格式不兼容。MAM 的做法是把 action 沿 feature 维度拼接到 item embedding 上，训练时随机 mask 20% 的 action，推理时候选位置的 action 全部 mask。模型需要从 item content 和历史上下文"猜"出 action——这既是排序目标，又是一种去噪正则化。序列长度不变，检索和排序共享同一个 forward pass。
-</TechBlock>
 
-<TechBlock title="Blended Training">
+### Blended Training
+
 每个训练样本同时包含用户历史序列（供检索目标用）和一个 feedview impression slate（供排序目标用）。检索用 sampled softmax，排序用 per-action BCE，两个 loss 联合优化。数据层面用 Ray in-trainer join 实时拼接，避免离线 fanout。
-</TechBlock>
 
-<TechBlock title="Cross-stage KV-cache Sharing">
+### Cross-stage KV-cache Sharing
+
 检索阶段编码用户历史（O(n²) self-attention）后，KV cache 通过 GPU 共享内存池直接传递给排序进程。排序只需要做候选 tokens 对 cached history 的 cross-attention（O(nk)），避免重复编码。两个进程通过 CUDA IPC handles 映射同一块 GPU 物理内存，零 CPU-GPU 拷贝。
-</TechBlock>
+
+---
 
 ## 费曼讲解
 
@@ -84,6 +73,8 @@ import CompareGrid from '@site/src/components/CompareGrid';
 **KV-cache 跨阶段复用的经济学**。一个 12 层 Transformer 编码 992 个 token 的用户历史，self-attention 的计算量是 O(n²)。如果检索和排序各做一遍，就是 2×O(n²)。KV-cache sharing 让排序只需要做 O(nk)（k=656 个候选对 n=992 个历史 token 的 cross-attention）。在 Pinterest 的配置下，这带来了 2.47× 的加速（prefill→decode），叠加 FP8 和 flex attention 后达到 3.92×。本质上，排序从"重新理解用户"变成了"在已有理解的基础上评估候选"。
 
 **M-FALCON Attention Pattern**。候选位置之间互相看不到（blocked），每个候选只能 attend to 历史位置。这保证了：（1）候选的打分互相独立，不受 batch 组成影响；（2）attention 复杂度从 O((n+k)²) 降到 O(n²+nk)；（3）可以用 flex attention 编译成 fused CUDA kernel。这个设计和 DeGRe 的"候选约束解码"有异曲同工之妙——都是通过限制候选之间的信息流来保证打分的独立性和效率。
+
+---
 
 ## 核心机制图
 
@@ -116,6 +107,8 @@ import CompareGrid from '@site/src/components/CompareGrid';
 └─────────────────────────────────────────────────────────┘
 ```
 
+---
+
 ## 餐巾纸速写
 
 | 维度 | 以前怎么想 | UniPinRec 说应该怎么想 |
@@ -125,11 +118,11 @@ import CompareGrid from '@site/src/components/CompareGrid';
 | 排序建模 | 需要 interleave action token（序列翻倍） | action 沿 feature 维度拼接+mask，序列长度不变 |
 | 计算复用 | 检索和排序各编码一次用户历史 | 检索编码一次，排序只做增量 decode（KV-cache sharing） |
 
+---
+
 ## 博导审稿
 
-<SummaryBox title="一句话判决">
-Weak Accept。价值在于"证明全栈统一在 Pinterest 规模可行"这个系统性结论，但每个技术组件都是已有 trick 的搬运和组合，缺乏不可替代的理论或方法贡献。与 DIG-v2 的理论深度形成鲜明对比。
-</SummaryBox>
+**一句话判决**：Weak Accept。价值在于"证明全栈统一在 Pinterest 规模可行"这个系统性结论，但每个技术组件都是已有 trick 的搬运和组合，缺乏不可替代的理论或方法贡献。与 DIG-v2 的理论深度形成鲜明对比。
 
 **选题眼光**：7/10。"全栈统一"这个问题定义本身有价值，但 contribution 的包装有过度之嫌。真正有新意的只有 MAM 一个点——证明 action 沿 feature 维度拼接+mask 可以替代 interleaving，让同一序列同时服务检索和排序。把一个 trick 级别的发现包装成三大贡献的系统论文，选题策略上是聪明的，但学术贡献密度不高。
 
@@ -137,15 +130,15 @@ Weak Accept。价值在于"证明全栈统一在 Pinterest 规模可行"这个�
 
 **实验诚意**：7/10。线上 A/B 实验覆盖两个 surface，指标体系完整。但两个硬伤：（1）offline ranking lift +14.8% 被下游 ranker 稀释到线上仅 +0.95%，说明 L1 ranking 的增量在有 L2 ranker 的情况下非常有限；（2）没有和 OneRec 做直接对比，竞品分析不充分。
 
-<NoticeBox>
 **写作功力**：7/10。Figure 1 的四维度对比表是亮点。但论文把大量篇幅花在 serving 细节（CUDA IPC handles、Faiss search_and_reconstruct、FP8 量化）上，这些是工程实现细节而非方法贡献，给人"用系统工程量撑篇幅"的感觉。
-</NoticeBox>
+
+---
 
 ## 与 DIG-v2 的核心区别
 
 UniPinRec 和 DIG-v2 都在做"检索+排序统一"，但设计哲学、理论基础和技术路线截然不同：
 
-**1. Late Fusion vs Early Fusion**
+### 1. Late Fusion vs Early Fusion
 
 这是最根本的分歧。UniPinRec 的用户表示是 **candidate-independent** 的——Transformer 编码用户历史时完全不知道要评估哪些候选，产出的是一个通用的用户表示，然后通过 ANN dot-product（检索）或 cross-attention（排序）与候选交互。这本质上是 **Late Fusion**：$s = f(\phi(H), e_v)$。
 
@@ -153,17 +146,15 @@ DIG-v2 的核心优势恰恰在于 **Early Fusion**——target item embedding �
 
 UniPinRec 选择 Late Fusion 是出于工程考量：candidate-independent 的用户表示可以缓存和复用（KV-cache sharing），而 Early Fusion 的用户表示是 target-conditioned 的，每换一个候选就要重新编码，无法缓存。这是一个 **信息量 vs 计算效率** 的 trade-off。
 
-**2. 统一方式：工程统一 vs 理论统一**
+### 2. 统一方式：工程统一 vs 理论统一
 
 UniPinRec 的统一是 **工程层面** 的——同一个 backbone、同一种输入格式、同一次训练、同一套 serving。它不关心"判别和生成在数学上是否等价"，只关心"能不能用一个模型同时做两件事"。
 
 DIG-v2 的统一是 **理论层面** 的——证明"判别即生成"，在 SID 框架下判别式打分和生成式概率在线性操作条件下等价，并精确刻画非线性操作引入的 gap（RCN 修正）。DIG-v2 不只是"一个模型做两件事"，而是证明"这两件事本质上是同一件事"。
 
-**3. 对 DIG-v2 的启发**
+### 3. 对 DIG-v2 的启发
 
-<QuoteBlock label="启发">
 UniPinRec 的 KV-cache sharing 思路对 DIG-v2 有参考价值：即使 DIG-v2 用 Early Fusion，也可以把用户历史的 self-attention 部分缓存起来，只在 target-conditioned 的层做增量计算。这相当于"前 N 层 Late Fusion（可缓存）+ 后 M 层 Early Fusion（target-aware）"的混合设计，兼顾信息量和效率。
-</QuoteBlock>
 
 ---
 
