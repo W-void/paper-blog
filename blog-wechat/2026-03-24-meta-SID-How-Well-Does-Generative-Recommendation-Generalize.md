@@ -5,7 +5,7 @@ tags: [公众号]
 ---
 
 
-![](https://files.mdnice.com/user/83179/fb37ab16-fd34-49b7-bea4-83970a1c9de4.png)
+![](/img/wechat/fb37ab16-fd34-49b7-bea4-83970a1c9de4-2b0375.png)
 
 How Well Does Generative Recommendation Generalize?
 
@@ -28,7 +28,7 @@ https://arxiv.org/pdf/2603.19809
 # 记忆与泛化的定义
 
 记忆与泛化可以用下面一张图表示：
-![](https://files.mdnice.com/user/83179/88d059da-1127-4b70-8902-1d04bf199a7c.png)
+![](/img/wechat/88d059da-1127-4b70-8902-1d04bf199a7c-a915bc.png)
 
 记忆：从itemA->itemB
 
@@ -49,7 +49,7 @@ https://arxiv.org/pdf/2603.19809
 模型选择TIGER（SID-based GR）vs SASRec（item ID-based），都用 cross-entropy loss 训练，配置对齐。
 
 
-![](https://files.mdnice.com/user/83179/6e4cc3e5-455a-40cd-8ea7-d5c376b9a7f3.png)
+![](/img/wechat/6e4cc3e5-455a-40cd-8ea7-d5c376b9a7f3-1cb984.png)
 
 结论：
 1. **SASRec负责记忆，TIGER负责泛化。**
@@ -66,10 +66,10 @@ https://arxiv.org/pdf/2603.19809
 作者借鉴了LLM的方法：在LLM中，通常通过n-gram相关性来评估记忆。比如item的sid长度为L，那它的前n个码本就是它的n-gram前缀。
 
 下图是一个2-gram前缀的例子：item id还需要靠2跳泛化才能从蓝色方块跳到黄色圆圈，SID直接靠记忆就能从蓝色方块跳到黄色圆圈。
-![](https://files.mdnice.com/user/83179/838234ef-8e15-482f-9d1e-592007494dd5.png)
+![](/img/wechat/838234ef-8e15-482f-9d1e-592007494dd5-903249.png)
 
 本文统计了所有泛化样本（4跳以内）的缀记忆token，用的是256*3的SID：
-![](https://files.mdnice.com/user/83179/d45f7d52-2344-42e5-ba81-69abeaa052d2.png)
+![](/img/wechat/d45f7d52-2344-42e5-ba81-69abeaa052d2-ee13f5.png)
 
 实验结果：
 
@@ -79,7 +79,7 @@ https://arxiv.org/pdf/2603.19809
 **结论：TIGER 的"泛化"本质是靠 token prefix 的记忆来实现的，不是真正的从未见过的模式组合。**
 
 
-![](https://files.mdnice.com/user/83179/099149b4-f60f-438f-b85a-8fe4ba286016.png)
+![](/img/wechat/099149b4-f60f-438f-b85a-8fe4ba286016-a869d1.png)
 作者还对比了前缀一致出现次数和效果的关系，上图，看同样颜色的就行。当count很小时，sasrec和tiger的效果都很差，count增大tiget的效果就好起来了，但是1-gram的效果一直很差。
 
 **结论：Token 记忆支持越多，泛化越好**
@@ -88,7 +88,7 @@ https://arxiv.org/pdf/2603.19809
 **问题：为什么TIGER的记忆性不如SASREC呢？**
 
 作者进行了以下实验：
-![](https://files.mdnice.com/user/83179/6b8899a8-5e1c-423d-aaec-531fc1dacfc2.png)
+![](/img/wechat/6b8899a8-5e1c-423d-aaec-531fc1dacfc2-2f23ec.png)
 
 对记忆型 instance，同时观察两个概率：
 
@@ -102,7 +102,7 @@ https://arxiv.org/pdf/2603.19809
 **结论：Token记忆会稀释item记忆。** TIGER 把概率质量分散给所有共享同一 prefix 的 item，没法集中给那一个特定的 item_B。
 
 机制验证：为了进一步巩固假设，作者改变标记记忆比率（通过改变码本大小 V），并衡量由此产生的性能变化。
-![](https://files.mdnice.com/user/83179/5a77d387-0153-4e88-b902-937486695efd.png)
+![](/img/wechat/5a77d387-0153-4e88-b902-937486695efd-ad7d41.png)
 
 实验设计：固定SID长度 L∈{2,3,4,5}，对每个 L 测试两种码本大小 V（大 vs 小），其他全部对齐（模型大小、训练计算量）
 
@@ -125,7 +125,7 @@ https://arxiv.org/pdf/2603.19809
 - 直接用item id based模型对所有item的最大预估值作为置信度（记忆倾向）指标，再sigmoid归一化到0-1；
 - q和τ都是超参数。
 
-![](https://files.mdnice.com/user/83179/86adf115-e755-4434-a9b0-a929ce0e5fd4.png)
+![](/img/wechat/86adf115-e755-4434-a9b0-a929ce0e5fd4-511d3a.png)
 
 
 
@@ -133,14 +133,14 @@ https://arxiv.org/pdf/2603.19809
 
 验证 MSP 有效性：
 
-![](https://files.mdnice.com/user/83179/875aa6e7-b2c3-4e46-9607-f9789791d393.png)
+![](/img/wechat/875aa6e7-b2c3-4e46-9607-f9789791d393-e053b3.png)
 
 - 按 MSP 分位数分组，MSP 越高的组里记忆型样本占比单调递增；说明MSP和记忆型正相关。
 - MSP 高的组 SASRec 更强；MSP 低的组 TIGER 更强；符合假设。
 
 最终性能（Table 4，7个数据集）：
 
-![](https://files.mdnice.com/user/83179/fda2410b-fe21-4a19-8e0f-9ffcf3529f47.png)
+![](/img/wechat/fda2410b-fe21-4a19-8e0f-9ffcf3529f47-ec6553.png)
 
 
 

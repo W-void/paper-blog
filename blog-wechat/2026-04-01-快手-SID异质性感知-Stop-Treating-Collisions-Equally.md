@@ -5,7 +5,7 @@ tags: [公众号]
 ---
 
 
-![](https://files.mdnice.com/user/83179/150bbe0f-98e7-4fde-9d7a-b61a8156abff.png)
+![](/img/wechat/150bbe0f-98e7-4fde-9d7a-b61a8156abff-47bcf0.png)
 
 Stop Treating Collisions Equally: Qualification-Aware Semantic ID Learning for Recommendation at Industrial Scale
 
@@ -50,12 +50,12 @@ In-batch 观察到的 SID 重叠，来源并不相同：
 
 完整损失包括：
 
-![](https://files.mdnice.com/user/83179/6de65257-1dd8-4a96-903f-d2eb1c749a1e.png)
+![](/img/wechat/6de65257-1dd8-4a96-903f-d2eb1c749a1e-4827d7.png)
 
 
 完整模型图如下：
 
-![](https://files.mdnice.com/user/83179/0a6c2ed2-23f4-45ff-b8eb-e461c1995720.png)
+![](/img/wechat/0a6c2ed2-23f4-45ff-b8eb-e461c1995720-0c68b5.png)
 
 
 ## 2.2 CVPM：先过滤，再排斥
@@ -66,7 +66,7 @@ In-batch 观察到的 SID 重叠，来源并不相同：
 
 ② 同 item 掩码：相同 item ID 的重复采样不该视为冲突。
 
-![](https://files.mdnice.com/user/83179/d2d7b509-4b96-4ef3-8141-8fbb2e3894ea.png)
+![](/img/wechat/d2d7b509-4b96-4ef3-8141-8fbb2e3894ea-d19150.png)
 
 只有 M_ij = 1 的 pair 才计算损失。
 
@@ -82,9 +82,9 @@ In-batch 观察到的 SID 重叠，来源并不相同：
 
 分别施加 hinge 损失，要求 encoder 空间余弦距离超过对应阈值：
 
-![](https://files.mdnice.com/user/83179/167721a7-226a-4851-8417-7af83ed75784.png)
+![](/img/wechat/167721a7-226a-4851-8417-7af83ed75784-e4ff86.png)
 
-![](https://files.mdnice.com/user/83179/6edd1ed8-591e-49da-a7ff-99d075bbdca8.png)
+![](/img/wechat/6edd1ed8-591e-49da-a7ff-99d075bbdca8-1f5354.png)
 
 其中 m_full >= m_partial，是超参数，D是hanmming距离。训练推进中，这一约束重塑 embedding 空间，减少量化时的碰撞频率。
 
@@ -92,11 +92,11 @@ In-batch 观察到的 SID 重叠，来源并不相同：
 
 本文提出的HaMR损失是一个可插拔模块，对很多量化方法都有提升：
 
-![](https://files.mdnice.com/user/83179/7db4bd9c-09e8-4db7-8d04-badb477cf6db.png)
+![](/img/wechat/7db4bd9c-09e8-4db7-8d04-badb477cf6db-65c84e.png)
 
 
 在线提升也很高：
 - 在召回和精排都有提升
 - 冷启提升更明显，冷启的定义是：播放量小于100次和小于600次
 
-![](https://files.mdnice.com/user/83179/89fc5748-ff11-4a43-b1cf-905d1eb76480.png)
+![](/img/wechat/89fc5748-ff11-4a43-b1cf-905d1eb76480-53c072.png)

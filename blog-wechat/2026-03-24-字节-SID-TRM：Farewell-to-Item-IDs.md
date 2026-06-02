@@ -5,7 +5,7 @@ tags: [公众号]
 ---
 
 
-![](https://files.mdnice.com/user/83179/17b2f00f-2e42-496f-bc3d-2ac31cf84be7.png)
+![](/img/wechat/17b2f00f-2e42-496f-bc3d-2ac31cf84be7-64decf.png)
 
 Farewell to Item IDs: Unlocking the Scaling Potential of Large Ranking Models via Semantic Tokens
 
@@ -37,18 +37,18 @@ Byte Pair Encoding (BPE) 生成组合 token（Mem-token）。比如下图中item
 - Mem-token（记忆 token）= BPE 组合 token，记忆高频 item 的细粒度行为模式，老/热门 item 表现好
 
 再用deep&wide模型学习最终的emb。
-![](https://files.mdnice.com/user/83179/4d8e7691-b3cc-486e-bba7-089ee2e203d5.png)
+![](/img/wechat/4d8e7691-b3cc-486e-bba7-089ee2e203d5-e8b0bb.png)
 
 
 当然本文也有协同感知的多模态表征、判别 + 生成联合优化这些模块，但个人认为不是最核心的贡献点。完整模型图如下：
-![](https://files.mdnice.com/user/83179/570e5c33-13e7-4885-b59b-b08e20dfc926.png)
+![](/img/wechat/570e5c33-13e7-4885-b59b-b08e20dfc926-e1d665.png)
 
 # 2 实验
 
 离线：
-![](https://files.mdnice.com/user/83179/26bf193f-452a-4482-a105-abdb113bd49e.png)
+![](/img/wechat/26bf193f-452a-4482-a105-abdb113bd49e-24c0d7.png)
 
 在线：
-![](https://files.mdnice.com/user/83179/7f09d920-7b0d-4e98-bd29-48351adb8cdf.png)
+![](/img/wechat/7f09d920-7b0d-4e98-bd29-48351adb8cdf-b49fcd.png)
 
 本文本质上仍是群体记忆，Gen-token 和 Mem-token都是基于SID的，没有解决 SID 冲突问题（两个 item 共享相同 SID 序列）。
