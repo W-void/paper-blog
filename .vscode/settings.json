@@ -1,0 +1,4 @@
+{
+  "markdown.preview.typographer": true,
+  "markdown.server.root": "${workspaceFolder}/static"
+}

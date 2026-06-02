@@ -5,7 +5,7 @@ tags: [公众号]
 ---
 
 
-![](/img/wechat/d75c5518-ba89-4160-9b6b-3f0613f260ec-b84984.png)
+![](../static/img/wechat/d75c5518-ba89-4160-9b6b-3f0613f260ec-b84984.png)
 
 GReF: A Unified Generative Framework for Efficient Reranking via Ordered Multi-token Prediction
 
@@ -33,7 +33,7 @@ https://arxiv.org/pdf/2510.25220
 # 2 方法
 
 重排的目的是从m个候选中选择n个进行排列，是一个$A_m^n$空间中选择最优排列的问题。
-![](/img/wechat/0fa1212c-4133-4451-abab-7a18c1f971ab-8c2bbc.png)
+![](../static/img/wechat/0fa1212c-4133-4451-abab-7a18c1f971ab-8c2bbc.png)
 
 ## 2.1 生成器
 本文用一个双向attention基于**精排列表**进行列表生成。
@@ -45,16 +45,16 @@ https://arxiv.org/pdf/2510.25220
 ## 2.2 pre-train
 
 用用户的**曝光行为**进行NTP的pre-train：（作者用没提有用到SID，应该是在全局做的softmax吧）
-![](/img/wechat/f3f46458-d2af-4936-bf75-7ffd19e01b26-e0f52b.png)
+![](../static/img/wechat/f3f46458-d2af-4936-bf75-7ffd19e01b26-e0f52b.png)
 
 ## 2.3 post-train
 前面提到的**生成器-评估器的不一致**问题，作者提出Rerank-DPO进行解决（就是在DPO中考虑位置信息）。
 
 1. 基于下面的公式对用户曝光序列（包括曝光位置$P_i$+用户反馈$U_i$）进行打分：
-![](/img/wechat/cbb72be6-9fb0-4bf7-a873-82a81789cb79-a9a6e1.png)
+![](../static/img/wechat/cbb72be6-9fb0-4bf7-a873-82a81789cb79-a9a6e1.png)
 2. 基于打分对用户曝光序列进行排序。
 3. 构造正负样本对，进行dpo计算。
-![](/img/wechat/2d6b05b1-682a-4bb6-b467-b0411adde653-7b704b.png)
+![](../static/img/wechat/2d6b05b1-682a-4bb6-b467-b0411adde653-7b704b.png)
 
 - *个人认为，本文针对问题一的解决方案，颇有点“如果无法解决问题，那就解决问题本身”。生成器和评估器存在目标不一致，生成器和作者人工定义的reward就不存在目标不一致问题了吗？关键在于reward设计的合不合理，和用没用评估器没啥关系吧，除非能证明：基于评估器设计的所有reward在理论上均不合理。*
 - *并不是说“解决问题本身”是错的。像快手EMER，人家在多目标优化中发现线上指标不合理，于是提出IPUT指标，增加了离在线一致性，这就很合理。相反，号称首个无冲突多任务的模型GNOLR，解决多任务冲突的方案是融合多任务为单任务，这就是典型的“仅解决问题本身”*
@@ -63,23 +63,23 @@ https://arxiv.org/pdf/2510.25220
 
 输出有n个head，基于编码器提取的隐藏层向量h，从候选中输出下一个item的概率。
 
-![](/img/wechat/34b70ec0-f7a2-455c-89a4-01a04600789f-170019.png)
+![](../static/img/wechat/34b70ec0-f7a2-455c-89a4-01a04600789f-170019.png)
 
 看公式应该算是MTP，因为重排内部的生成没有依赖前后关系（生成t+i没有依赖t+i-1和t+i+1）：
 
-![](/img/wechat/c0a97315-ef73-4bd4-907d-32022f327374-16ac95.png)
+![](../static/img/wechat/c0a97315-ef73-4bd4-907d-32022f327374-16ac95.png)
 
 
 对比下NAR4Rec这种一步生成的（直接输出m*n矩阵）：
-![](/img/wechat/313813ce-f6cb-4ebb-9645-7fbcbbc0df4e-04972b.png)
+![](../static/img/wechat/313813ce-f6cb-4ebb-9645-7fbcbbc0df4e-04972b.png)
 
 # 3 实验
 
 离线指标：
-![](/img/wechat/25154a90-faeb-4fa1-ac21-bc7c8048c485-463534.png)
+![](../static/img/wechat/25154a90-faeb-4fa1-ac21-bc7c8048c485-463534.png)
 
 （说实话，感觉生成器离线看auc、ndcg这些指标没啥意义， 得看生成列表的列表收益、在排列空间中到底排第几吧？）
 
 线上AB：
 
-![](/img/wechat/1b9ff932-a367-471d-9596-1c0bcdc12f13-332223.png)
+![](../static/img/wechat/1b9ff932-a367-471d-9596-1c0bcdc12f13-332223.png)

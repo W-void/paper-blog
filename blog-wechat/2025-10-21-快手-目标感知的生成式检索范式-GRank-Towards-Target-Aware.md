@@ -5,7 +5,7 @@ tags: [公众号]
 ---
 
 
-![](/img/wechat/6c5616ec-9ccd-4cbf-acdd-c846fd28bb59-a4fda3.png)
+![](../static/img/wechat/6c5616ec-9ccd-4cbf-acdd-c846fd28bb59-a4fda3.png)
 
 
 GRank: Towards Target-Aware and Streamlined Industrial Retrieval with a Generate-Rank Framework 
@@ -30,17 +30,17 @@ https://arxiv.org/pdf/2510.15299
 # 2 方法
 
 模型结构如下，很简单，生成器-评估器范式。
-![](/img/wechat/a7fc0df0-aa04-4a5f-9189-2e0308ffbd70-50c104.png)
+![](../static/img/wechat/a7fc0df0-aa04-4a5f-9189-2e0308ffbd70-50c104.png)
 
 # 3 实验
 
 
-![](/img/wechat/81c68804-e255-4421-abe5-5f9b404eed15-a8758b.png)
+![](../static/img/wechat/81c68804-e255-4421-abe5-5f9b404eed15-a8758b.png)
 
 消融实验：
 
-![](/img/wechat/13ad765d-c0df-42dd-8ebf-8db81c5fa93a-ed9c2f.png)
+![](../static/img/wechat/13ad765d-c0df-42dd-8ebf-8db81c5fa93a-ed9c2f.png)
 
 online AB：快手单栏的业务
 
-![](/img/wechat/ebabf7c6-e771-4885-9f75-5d76669f8fcc-03b58a.png)
+![](../static/img/wechat/ebabf7c6-e771-4885-9f75-5d76669f8fcc-03b58a.png)

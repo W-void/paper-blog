@@ -5,7 +5,7 @@ tags: [公众号]
 ---
 
 
-![](/img/wechat/55d3a457-3737-4157-8995-b877a1e7cc5d-26cf90.png)
+![](../static/img/wechat/55d3a457-3737-4157-8995-b877a1e7cc5d-26cf90.png)
 
 OneMall: One Architecture, More Scenarios — End-to-End Generative Recommender Family at Kuaishou E-Commerce
 

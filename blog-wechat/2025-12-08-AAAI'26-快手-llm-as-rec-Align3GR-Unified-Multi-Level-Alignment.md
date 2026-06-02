@@ -5,7 +5,7 @@ tags: [公众号]
 ---
 
 
-![](/img/wechat/d75fa7ac-abe8-4e0a-8f61-0b6f25eec35a-989686.png)
+![](../static/img/wechat/d75fa7ac-abe8-4e0a-8f61-0b6f25eec35a-989686.png)
 
 Align3GR: Unified Multi-Level Alignment for LLM-based Generative Recommendation
 
@@ -21,22 +21,22 @@ https://arxiv.org/pdf/2511.11255
 直接讲方法吧。本文从tokenization、SFT、RL三个层面对llm进行下游任务的对齐。
 
 
-![](/img/wechat/263e6b29-a5a8-41b5-b80d-d9232bce86c3-7d7400.png)
+![](../static/img/wechat/263e6b29-a5a8-41b5-b80d-d9232bce86c3-7d7400.png)
 
 ## 1.1 tokenization
 
-![](/img/wechat/cebf7c70-28c5-46fa-9377-3a437c38fab7-8ec5fc.png)
+![](../static/img/wechat/cebf7c70-28c5-46fa-9377-3a437c38fab7-8ec5fc.png)
 
 和DAS一样，用双塔模型引入协同信息，相当于简化版的DAS，省去了去偏loss。
 
-![](/img/wechat/574856e0-6c96-49c7-a967-a071ccc5b84a-c5a635.png)
+![](../static/img/wechat/574856e0-6c96-49c7-a967-a071ccc5b84a-c5a635.png)
 
 （扩参数要避免过拟合，就要保证模型的泛化性，提高泛化性最简单的方式就是降维。tokenizer采用hard方式降维--缩小生成空间，简单粗暴。传统的SASRec其实就是一种soft的方式，按理说soft的方式上限会更高，可能难度太大了吧。）
 
 ## 1.2 SFT
 和LC-Rec一样，设计了多个任务进行对齐，prompt如下：
 
-![](/img/wechat/00fd8b8c-e5c9-4e99-9bd0-db9f6775c942-c862ad.png)
+![](../static/img/wechat/00fd8b8c-e5c9-4e99-9bd0-db9f6775c942-c862ad.png)
 
 ## 1.3 RL
 
@@ -44,7 +44,7 @@ SFT依赖有限的监督信号，缺乏探索，难以适应复杂业务。为�
 
 渐进式DPO：相比DPO分了多阶段，先学简单的，再学难的。
 
-![](/img/wechat/4fb71a02-0814-412b-90a2-79e84da2f841-c7dbba.png)
+![](../static/img/wechat/4fb71a02-0814-412b-90a2-79e84da2f841-c7dbba.png)
 
 怎么分多阶段呢？
 
@@ -54,7 +54,7 @@ SFT依赖有限的监督信号，缺乏探索，难以适应复杂业务。为�
 # 2 实验
 
 基于Llama2-7B lora微调。
-![](/img/wechat/56efc72b-9217-4ef7-b807-9aceece15ec5-96b3eb.png)
+![](../static/img/wechat/56efc72b-9217-4ef7-b807-9aceece15ec5-96b3eb.png)
 
 在线AB，广告收入提升1.432%，在召回阶段，不知道是端到端还是离线缓存，更新频率多少。
-![](/img/wechat/5c247315-f3d3-465b-9899-65882ee32c0a-7c89f4.png)
+![](../static/img/wechat/5c247315-f3d3-465b-9899-65882ee32c0a-7c89f4.png)

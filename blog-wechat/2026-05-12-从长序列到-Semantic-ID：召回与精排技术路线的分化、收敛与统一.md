@@ -60,7 +60,7 @@ UxSID 抓住的正是这一点。它不再试图让模型每次都从原始 item
 这就是 UxSID 最核心的思想：把用户历史从一个平铺的事件序列，改造成一个可按语义寻址的兴趣库。
 
 
-![](/img/wechat/731443bc-dc64-4435-898e-27ab41bed6dd-f057ee.png)
+![](../static/img/wechat/731443bc-dc64-4435-898e-27ab41bed6dd-f057ee.png)
 
 
 从模型结构上看，UxSID 学的不是一个统一的 user embedding，而是一种 semantic-specific user representation。用户针对不同 Semantic ID，可以拥有不同的兴趣表示。你可以把它理解成一张按语义地址建立索引的用户内存：历史行为先按 SID 路由到不同语义桶中，模型在每个桶里聚合局部兴趣，在线阶段再根据目标 item 的 SID，直接读取对应的语义表示进行交互。
@@ -94,7 +94,7 @@ UxSID 的不同之处，就在于它没有沿着“把历史继续压进 latent 
 但这条路并不是把 Semantic ID 接上一个自回归模型就结束了。
 
 
-![](/img/wechat/2a591df7-2f9d-49ac-976b-a0c814a8dab0-22e038.png)
+![](../static/img/wechat/2a591df7-2f9d-49ac-976b-a0c814a8dab0-22e038.png)
 
 GLASS 真正抓住的问题是：在一串 SID token 里，不同 token 的职责并不对等。尤其是第一个 token，它通常承担着最粗粒度的语义路由作用。第一步如果走偏了，后续 token 再怎么生成，也很可能只是在错误的语义分支里越走越深。也就是说，自回归生成虽然看起来把大问题拆成了多个小问题，但第一个 token 实际上是整个路径里最关键的决策点。
 
@@ -152,7 +152,7 @@ Semantic ID 恰好正在填补这个位置。
 
 DIG 的一个关键洞察是：Semantic ID 本质上可以被看作 item 空间到 token 空间的一种映射。沿着这个视角再往前走一步，很多原本看起来彼此分离的问题会突然连起来。精排做的事情，是在 item 空间里寻找最优解；生成式召回做的事情，则是在 token 空间里逐步生成同一个目标 item 对应的语义编码。表面上看，一个在做 discrimination，一个在做 generation；但从更抽象的层面看，它们其实是在不同表示空间里求解同一个 argmax 问题。
 
-![](/img/wechat/4b0bca57-b055-4578-90fc-a0fc65d00542-00dd64.png)
+![](../static/img/wechat/4b0bca57-b055-4578-90fc-a0fc65d00542-00dd64.png)
 
 一旦这样理解，召回和精排之间那条看似理所当然的边界，就没有那么牢固了。因为如果 token 空间只是 item 空间的另一种表达，而 Semantic ID 又恰好是连接这两个空间的桥梁，那么 generation 和 ranking 本来就不一定需要是两套彼此分裂的系统。DIG 的出发点，正是把这个隐含关系显式化。
 

@@ -10,4 +10,4 @@ FAIR: Focused Attention Is All You Need for Generative Recommendation
 
 https://arxiv.org/pdf/2512.11254
 
-![](/img/wechat/0acb5e6c-0d3a-4c53-a09c-bf53604dfbde-872fa3.png)
+![](../static/img/wechat/0acb5e6c-0d3a-4c53-a09c-bf53604dfbde-872fa3.png)

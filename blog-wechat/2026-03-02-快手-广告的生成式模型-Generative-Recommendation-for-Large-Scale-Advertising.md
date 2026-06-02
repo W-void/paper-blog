@@ -6,7 +6,7 @@ tags: [公众号]
 
 
 
-![](/img/wechat/f2f2864c-6af2-479b-83f4-6d702adf6189-881ccc.png)
+![](../static/img/wechat/f2f2864c-6af2-479b-83f4-6d702adf6189-881ccc.png)
 Generative Recommendation for Large-Scale Advertising
 https://arxiv.org/pdf/2602.22732
 
@@ -39,13 +39,13 @@ https://arxiv.org/pdf/2602.22732
 快手这个是广告的统一生成式模型，所以需要给不同类型的异构广告编码到统一SID空间中。
 
 
-![](/img/wechat/4cac5736-f10e-4497-b7bf-ff65d8d21aea-87fd2b.png)
+![](../static/img/wechat/4cac5736-f10e-4497-b7bf-ff65d8d21aea-87fd2b.png)
 
 
 1. 设计了6个模版针对不同的广告，输入llm中得到语义向量。
 
 2. 引入协同信息，用对比损失拉近/远正负样本：
-![](/img/wechat/bf9ca926-91a1-4224-a0f8-c62a7a41d87f-b5a34f.png)
+![](../static/img/wechat/bf9ca926-91a1-4224-a0f8-c62a7a41d87f-b5a34f.png)
 
 3. 多粒度多分辨率(MGMR)RQ-Kmeans。多分辨率（MR）体现在：较低层级使用较大的码本尽早捕捉主导因素，而较高层级则对低熵残差进行建模。多粒度（MG）体现在：直接把最后一层用广告信息硬编码，而非语义信息。
 
@@ -55,15 +55,15 @@ https://arxiv.org/pdf/2602.22732
 
 一个图就清晰了，改串行为并行，只有最后一层是串行的。
 
-![](/img/wechat/0377e96a-4014-4e93-844f-a3e992477bda-46d66d.png)
+![](../static/img/wechat/0377e96a-4014-4e93-844f-a3e992477bda-46d66d.png)
 
 感觉和虾皮onepiece里提到的隐式推理加速有点像，推理加速应该是llm一大子方向。
 
 ## 2.3 Value-Aware Supervised Learning
-![](/img/wechat/faad9f01-b9ac-4cd7-a6aa-5c0c12013183-7f9c6f.png)
+![](../static/img/wechat/faad9f01-b9ac-4cd7-a6aa-5c0c12013183-7f9c6f.png)
 
 在ntp 任务的基础上，增加了一个ecpm生成，对ecpm进行等频分桶（equiprobable buckets）。
-![](/img/wechat/e646e5a7-3c0f-43f6-b966-cc42e0788753-db81f7.png)
+![](../static/img/wechat/e646e5a7-3c0f-43f6-b966-cc42e0788753-db81f7.png)
 
 （这个ecpm的label应该和onerec一样，由判别式精排模型输出。那generator推全后，还需要离线用evaluator评估一次吗？）
 
@@ -71,7 +71,7 @@ https://arxiv.org/pdf/2602.22732
 
 然后对LazyAR并行的部分增加一个辅助的MTP loss，让并行部分直接生成target token而不依赖串行的结果：
 
-![](/img/wechat/9dbc04de-34fa-4309-815a-b64cbe044d79-dc186f.png)
+![](../static/img/wechat/9dbc04de-34fa-4309-815a-b64cbe044d79-dc186f.png)
 
 ## 2.4 Ranking-Guided Reinforcement Learning
 
@@ -81,7 +81,7 @@ RSPO (RankingGuided Softmax Preference Optimization)：列表级优化，这个�
 
 公式如下，意思是，如果j的ecpm比i的ecpm低，且j的生成概率比i大，那就施加一个和排名（i、j）相关的惩罚。
 （所以样本肯定也是请求粒度的，不知道有没有包含未曝光样本）
-![](/img/wechat/dc2b8237-4b3b-453e-a08f-3598b9269bd8-0285d0.png)
+![](../static/img/wechat/dc2b8237-4b3b-453e-a08f-3598b9269bd8-0285d0.png)
 
 作者证明，这个loss就是NDCGcost的上界。
 
@@ -102,4 +102,4 @@ RSPO (RankingGuided Softmax Preference Optimization)：列表级优化，这个�
 
 没看到离线指标，只有业务指标。相比onerec-v2有很大提升：
 
-![](/img/wechat/0674c064-b24f-424c-88c8-66e9e4555cfe-d6ca9f.png)
+![](../static/img/wechat/0674c064-b24f-424c-88c8-66e9e4555cfe-d6ca9f.png)

@@ -5,7 +5,7 @@ tags: [公众号]
 ---
 
 
-![](/img/wechat/5fde6129-14c0-45a4-87b8-f4d2e8bfed01-757e5b.png)
+![](../static/img/wechat/5fde6129-14c0-45a4-87b8-f4d2e8bfed01-757e5b.png)
 
 Not All Candidates are Created Equal: A Heterogeneity-Aware Approach to Pre-ranking in Recommender Systems
 
@@ -33,7 +33,7 @@ https://arxiv.org/pdf/2603.03770
 - 无脑堆大模型 → 大模型在软样本上和小模型效果差不多，**算力浪费。**
 
 作者计算了BCE 和 InfoNCE下，不同难度负样本的logits值。按理说只要是负例，logits就应该越小越好，但是越难的负样本logits却越大。
-![](/img/wechat/8b9ff58f-6904-4fdf-97be-5b349552d96c-c35c35.png)
+![](../static/img/wechat/8b9ff58f-6904-4fdf-97be-5b349552d96c-c35c35.png)
 
 
 # 2 方法
@@ -58,14 +58,14 @@ HAP：两个核心机制
 
 整体模型结构如下：
 
-![](/img/wechat/ba32c843-d268-4c7e-90bf-fb443c0d3695-e49175.png)
+![](../static/img/wechat/ba32c843-d268-4c7e-90bf-fb443c0d3695-e49175.png)
 
 
 # 3. 实验
 
 所有难度档位全面领先，EN 最难档 有+1.3%的提升！
 
-![](/img/wechat/8fb3d5dd-1ad0-45f1-ade4-3041b5fd62d8-567a2f.png)
+![](../static/img/wechat/8fb3d5dd-1ad0-45f1-ade4-3041b5fd62d8-567a2f.png)
 
 
 上线了一个轻量模型（310万参数）和一个表达能力强的模型（860万）。用户 app 使用时长 +0.4%，活跃天数 +0.05%，ctr+3.0%。
@@ -76,7 +76,7 @@ HAP：两个核心机制
 
 下图就是字节发现取top550（30%）时，效果和效率均最大化。而且一个细节是，**随着进入复杂模型的候选越来越多，效果反而在变差**。进一步说明难易样本需要被区别建模。
 
-![](/img/wechat/c6a96435-60dc-4d97-97c8-49b89de78cb4-b08836.png)
+![](../static/img/wechat/c6a96435-60dc-4d97-97c8-49b89de78cb4-b08836.png)
 
 此外，HAP在保持与最优模型相当的服务延迟的同时，减少了6%的CPU使用率，展示了其在大型生产环境中以较低的计算成本提供更高有效性的能力。
 

@@ -5,7 +5,7 @@ tags: [公众号]
 ---
 
 
-![](/img/wechat/95620dde-048a-476f-95f5-6d67ca552de6-20f534.png)
+![](../static/img/wechat/95620dde-048a-476f-95f5-6d67ca552de6-20f534.png)
 
 CAT-ID2: Category-Tree Integrated Document Identifier Learning
 for Generative Retrieval In E-commerce
@@ -33,25 +33,25 @@ RQ-VAE这种无监督聚类捕捉层次结构，缺乏可靠性；强制类别�
 
 # 2 方法
 
-![](/img/wechat/598c7727-ce22-450d-b528-85361dae1630-842853.png)
+![](../static/img/wechat/598c7727-ce22-450d-b528-85361dae1630-842853.png)
 其实就是3个loss。
 
 ## 2.0 原始的RQ-VAE loss
 
 原始embedding用d表示，encoder到隐空间后为z，z再经过量化变为$\hat{z}$，重构损失就是decoder后再还原回d：
 
-![](/img/wechat/076ef161-b6f9-4c40-8d46-a5eef0c9286d-cbc94c.png)
+![](../static/img/wechat/076ef161-b6f9-4c40-8d46-a5eef0c9286d-cbc94c.png)
 
 ## 2.1 分层类别约束loss
 约束相同品类的doc在同一个code中。
-![](/img/wechat/fa1d9ab9-c559-40b6-933c-e0cfb2dc5efc-986f7f.png)
+![](../static/img/wechat/fa1d9ab9-c559-40b6-933c-e0cfb2dc5efc-986f7f.png)
 其中，$r_a$、$r_p$、$r_n$分别代表锚点样本、正样本和负样本。同一类别内的文档被视为正例，而来自不同类别的文档则被视为负例。从第二层开始，选择在前一层属于同一类别但在当前层落入不同子类别的作为负样本。
 
 值得注意的是，类别树的最大深度 H 必须小于 RQ-VAE 的最大深度 L，才能使用此方法。
 
 ## 2.2 簇尺度约束loss
 如果类别数量|C|小于码本数量K，那么每个类别的样本可能会独占一个码本code，就起不到聚类的效果（相当于K-means选的聚类中心数量比样本数量还多）。
-![](/img/wechat/df0e7267-5cf8-4335-9c5c-2bcc1f640582-4bef86.png)
+![](../static/img/wechat/df0e7267-5cf8-4335-9c5c-2bcc1f640582-4bef86.png)
 直接让样本属于某个code的概率和全1向量计算双向的KL散度。双向KL散度有两个目的：第一项防止过度使用某些码本code，而第二项则对未使用的码本code进行惩罚。CSCL通过鼓励样本在码本条目上的平均分布接近平均分布，来惩罚分配不平衡的情况。因此，它显著提高了码本的利用效率。
 
 （感觉让模型既要往左、又要往右，你就说考虑的全不全吧，然后效果全靠调参是吧。不如对每个类别C设置不同的权重，但超参数也太多了hh）
@@ -61,7 +61,7 @@ RQ-VAE这种无监督聚类捕捉层次结构，缺乏可靠性；强制类别�
 
 争议最大的第三点来了，为了保证文档语义ID的唯一性，让解码后的$\hat{d}$和其他doc距离尽可能远。
 
-![](/img/wechat/6147af31-c9f0-491e-be72-e8a8e01c1e26-b0d9fd.png)
+![](../static/img/wechat/6147af31-c9f0-491e-be72-e8a8e01c1e26-b0d9fd.png)
 
 重构损失是让$\hat{d}$和d尽可能接近，这个loss是让$\hat{d}$和其他$\hat{d}$尽可能远。
 
@@ -70,21 +70,21 @@ RQ-VAE这种无监督聚类捕捉层次结构，缺乏可靠性；强制类别�
 
 最终的loss：
 
-![](/img/wechat/9b89e5ad-c27e-4882-89b6-07c27a673d60-a0becd.png)
+![](../static/img/wechat/9b89e5ad-c27e-4882-89b6-07c27a673d60-a0becd.png)
 
 
 # 3 结论
 
 离线效果：
-![](/img/wechat/337873f4-4af8-4a93-93ed-6d5d402234f3-fb92ca.png)
+![](../static/img/wechat/337873f4-4af8-4a93-93ed-6d5d402234f3-fb92ca.png)
 
 超参数分析：
-![](/img/wechat/415f1d9c-0507-4627-826a-82280d29c204-abb2e4.png)
+![](../static/img/wechat/415f1d9c-0507-4627-826a-82280d29c204-abb2e4.png)
 
 
 在线AB：
-![](/img/wechat/afe95c2a-3db9-42fc-bab0-4136103f38df-be155d.png)
+![](../static/img/wechat/afe95c2a-3db9-42fc-bab0-4136103f38df-be155d.png)
 
 
 这个图画的真不错，看上去浅层还有明显的类别属性，深层基本就均匀分布了。
-![](/img/wechat/422af4c3-d026-4ad6-911b-5eb7c774cc68-11e3f4.png)
+![](../static/img/wechat/422af4c3-d026-4ad6-911b-5eb7c774cc68-11e3f4.png)

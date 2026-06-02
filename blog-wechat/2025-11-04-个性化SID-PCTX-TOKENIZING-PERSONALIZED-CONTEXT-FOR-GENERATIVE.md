@@ -5,7 +5,7 @@ tags: [公众号]
 ---
 
 
-![](/img/wechat/2896564c-e948-4ed0-9582-7e935628cd89-eacd67.png)
+![](../static/img/wechat/2896564c-e948-4ed0-9582-7e935628cd89-eacd67.png)
 
 PCTX: TOKENIZING PERSONALIZED CONTEXT FOR
 GENERATIVE RECOMMENDATION
@@ -24,12 +24,12 @@ https://arxiv.org/pdf/2510.21276
 
 模型结构如下，$e^{feat}$表示原本的item表征，$e^{ctx}$表示item的上下文表征：
 
-![](/img/wechat/7b722db5-4114-490f-a7e5-409f03e84f57-17c2aa.png)
+![](../static/img/wechat/7b722db5-4114-490f-a7e5-409f03e84f57-17c2aa.png)
 
 ## 2.1 个性化上下文表示
 用一个辅助模型，从用户历史行为中提取item $v_i$的上下文信息：
 
-![](/img/wechat/34218339-79f4-43ec-a93c-69eb4c9c31f1-69f585.png)
+![](../static/img/wechat/34218339-79f4-43ec-a93c-69eb4c9c31f1-69f585.png)
 
 v是行为序列，f是预训练好的辅助模型。
 
@@ -39,7 +39,7 @@ v是行为序列，f是预训练好的辅助模型。
 
 将C个上下文表征和原始表征concat在一起，就得到了item个性化表征。
 
-![](/img/wechat/7b977f8d-1939-4e05-9a52-3bbce8ed171f-a44df7.png)
+![](../static/img/wechat/7b977f8d-1939-4e05-9a52-3bbce8ed171f-a44df7.png)
 
 量化后可能会有重复，需要去重。
 
@@ -51,4 +51,4 @@ v是行为序列，f是预训练好的辅助模型。
 - 然后就是推理阶段，一个item id对应多个SID，冲突率提升了，SID的hit rate一定占优啊。但是文中并没有提到有特别的动作。如果上下文只是用于SID前缀，可以根据上下文进行硬过滤，本文该如何保证呢？
 
 
-![](/img/wechat/7d405170-a2c7-482a-90b5-a71263a4cafc-c53614.png)
+![](../static/img/wechat/7d405170-a2c7-482a-90b5-a71263a4cafc-c53614.png)
