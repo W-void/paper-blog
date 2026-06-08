@@ -1,16 +1,9 @@
----
-title: OneReason 技术报告（中文翻译）
-date: 2026-06-08
-slug: onereason-technical-report
-tags: [推荐系统, 生成式推荐, LLM, 思维链]
----
-
 # OneReason 技术报告
 
 - **原标题**：OneReason Technical Report
 - **作者**：OneRec Team
 - **来源**：https://arxiv.org/pdf/2606.06260
-- **翻译日期**：2026-06-08
+- **翻译日期**：2025-06-08
 
 ---
 
@@ -78,6 +71,7 @@ OneReason-Bench 将面向推理的基准测试任务组织为渐进层次结构�
 **统一任务形式化**。所有任务被形式化为序列生成 $Y = F(X)$，其中 $X$ 结合了任务指令 $I$ 和上下文 $C$（如物品模式、用户画像或交互历史）。目标 $Y$ 可以是物品模式、答案选项、自然语言响应或结构化演化链，使 R0-R3 任务共享统一的生成式评估协议。
 
 *Table 1 | Task taxonomy of OneReason-Bench organized across four reasoning layers.*
+![Table 1 | Task taxonomy of OneReason-Bench organized across four reasoning layers.](translate-OneReason-assets/table_1.png)
 
 #### 3.1.1. R0：感知（Perception）
 
@@ -194,6 +188,7 @@ R2 数据训练模型将用户兴趣作为时间过程进行推理。包括演�
 推荐推理轨迹（CoT）的构建遵循三阶段压缩-推理协议：人格抽象（Persona Abstraction）、兴趣扩展（Interest Expansion）和转移推断（Transition Inference）。
 
 **人格抽象（Persona Abstraction）**。人格抽象的目标是将稀疏且嘈杂的行为证据压缩为紧凑、可解释的先验。给定用户画像和交互历史，教师模型识别最可能的用户原型，或在用户不符合任何预定义类别时总结定制化画像。该抽象是一个软的、类型化的用户状态而非确定性标签：它缩小了可能的兴趣方向集合，但最终推断仍必须基于观察到的行为。此阶段通过将高维行为日志转换为少量偏好因子（如家庭消费需求、游戏技能提升、直播购物敏感度、食物偏好、健身目标或共享设备模糊性）来减少转移判断的搜索空间。表 7 给出了代表性的中文人格抽象案例及英文分析。
+![Table 7 | Representative persona abstraction cases with English analysis.](translate-OneReason-assets/table_7.png)
 
 **兴趣扩展（Interest Expansion）**。在人格抽象之后，模型执行兴趣扩展，使轨迹不会过早地锁定单一解释。此阶段从兴趣演化类型压缩开始：它从近期轨迹证据中识别类型化的模式（Motif），如搜索触发的需求、从宽泛类别到具体参数的细化、从内容到产品的场景延续、或直播/商品/广告/视频行为之间的跨领域回响。然后将这些模式展开为一小组候选下一兴趣假设。这样，兴趣扩展既足够宽泛以表示推荐不确定性，又足够紧凑以防止轨迹被原始行为标记淹没。
 
@@ -308,6 +303,7 @@ $$\hat{A}_{\text{MOPD},t} = \text{sg}\left[\log \pi_{\text{domain}_i}(y_t | x, y
 本节比较五种优化策略的推荐准确性：SFT 检查点、混合领域 RL、领域特定 RL、RFT 和 MOPD。评估在跨领域推荐设置下进行。
 
 如表 9 所示，所有后 SFT 优化方法在所有领域和指标上都大幅超越 SFT 基线，表明从自我探索中学习可以进一步增强超越监督模仿的推荐性能。然而，直接在 RL 期间混合所有领域并不一致地达到最佳性能。与领域特定 RL 相比，混合领域 RL 通常产生较弱的性能，表明异质领域可能引入冲突的优化信号。
+![Table 9 | Comparison of optimization strategies (SFT, Mix-RL, Domain-RL, RFT, MOPD) across four recommendation domains.](translate-OneReason-assets/table_9.png)
 
 两种知识整合方法提供互补收益：RFT 实现强大且稳定的增益，特别是在 Cross-Video 上；MOPD 表现有竞争力并在若干设置中获得最佳结果。总体而言，这些结果支持"先专精后统一"策略的有效性。
 
@@ -335,6 +331,7 @@ $$\hat{A}_{\text{MOPD},t} = \text{sg}\left[\log \pi_{\text{domain}_i}(y_t | x, y
 ![Figure 24 | Progressive log-likelihood improvement along CoT segments for SFT and RFT models.](translate-OneReason-assets/figure_24.png)
 
 **标准 3：物品合法性**。CoT 中引用的每个物品模式都应对应物品语料库中的有效标识符。如表 11 所示，$\gamma_{\text{legal}}$ 在 SFT 和 RFT 的所有四个领域均已饱和至 1.00。
+![Table 11 | Item legality and history grounding metrics across domains.](translate-OneReason-assets/table_11.png)
 
 **标准 4：历史基础性**。在合法物品模式中，我们进一步检查它们是否出现在用户的交互历史中。在 Cross-Video 和 Cross-Ad 上，RFT 相比 SFT 收紧了 $\gamma_{\text{hist|legal}}$（分别 +2.50 pt 和 +4.27 pt）。在 Cross-Live 和 Cross-Product 上，RFT 则表现出适度下降，这与表 9 中 RFT 在这两个领域相对 Mix-RL 的增益较小一致。
 
@@ -361,16 +358,20 @@ SFT 轨迹停留在表面 IP 层面（和平精英→更多和平精英），每
 - 冷启动敏感性：传统 ID 基模型在跨领域评估中挣扎，因为 33.69% 的目标物品 ID 在训练中未见过；相比之下，仅 11.55% 的目标物品模式未见过。
 - 文本基 LLM 推荐的局限：更先进的通用 LLM 不一定产生更好的推荐，表明推荐能力与通用智能或模型规模不可靠相关。其欠佳表现源于协同信号的缺失和基于 ANN 的描述到物品检索引入的误差。
 - OneReason 预训练的效果：LC-Rec 结果表明我们的 OneReason 预训练检查点为物品标记推荐提供了强大的语义基础。
+![Table 14 | Cross-domain recommendation performance comparison across ID-based, text-based, and itemic-token-based methods.](translate-OneReason-assets/table_14.png)
 
 **非推荐性能**。表 15 在 OneReason-Bench 上评估 R0-R2 能力。两个发现突出：RFT 思考模式有助于更高级推理（在 R1-R2 上改善平均性能）；OneReason 使紧凑物品标记具有竞争力（即使在输入信息劣势下，OneReason 在 R2 套件的部分任务上超越若干更大的先进 LLM）。
+![Table 15 | Non-recommendation (R0-R2) performance evaluation on OneReason-Bench.](translate-OneReason-assets/table_15.png)
 
 **通用智能健全性检查**。表 16 显示，在思考模式下，OneReason 在四个代表性基准测试（MMLU-Pro、GPQA-Diamond、MATH-500、GSM8K）上保持了其 Qwen3-8B 骨干的通用推理和指令遵循能力，提供了推荐导向训练不会灾难性降低通用能力的初步证据。相比之下，LC-Rec 变体在所有基准测试上遭受实质性退化。
+![Table 16 | General intelligence sanity check on MMLU-Pro, GPQA-Diamond, MATH-500, GSM8K.](translate-OneReason-assets/table_16.png)
 
 ### 8.2. 思考监督对非思考模式的增益
 
 虽然第 5.4.1 节的推荐 CoT 数据旨在提供紧凑、证据基础的推荐推理而非直接优化非思考解码，我们观察到一个重要的下游现象：思考监督可以改善直接推荐，即使在推理时显式推理轨迹被抑制。
 
 我们首先进行控制的 token 对齐实验。比较两种设置：(i) 在 100K unCoT 样本上继续 SFT；(ii) 在 40K CoT 样本和 50K unCoT 样本的混合上继续 SFT。两种设置对齐到相同的 0.25B token 训练预算。表 17 显示，在相同 token 预算下，用 CoT 数据替换部分 unCoT 数据在 Cross-Video、Cross-Product 和 Cross-Live 上改善了非思考性能。
+![Table 17 | Token-aligned comparison: CoT vs. unCoT SFT under the same 0.25B token budget.](translate-OneReason-assets/table_17.png)
 
 我们进一步进行样本数控制的混合比例扫描。在固定 100K 推荐样本预算下，变化 CoT 和 unCoT 样本的比例。图 25 显示响应曲线并非简单单调，大多数领域展现清晰的中间最优点。Cross-Video 在平衡混合附近达到最佳结果，Cross-Product 偏好更 CoT 重的混合，Cross-Ad 则曲线更平坦且最佳点更靠近 unCoT 侧。
 
@@ -413,6 +414,7 @@ SFT 轨迹停留在表面 IP 层面（和平精英→更多和平精英），每
 ### 9.3. 在线实验
 
 我们进行了为期 10 天的在线 A/B 实验，在快手 App 本地生活场景的子部分部署 OneReason，使用 5% 流量分配。如表 18 所示，直接使用 OneReason 进行检索和使用其增强实时 OneRec 都在在线 A/B 实验中产生显著改进。组合两种范式实现最佳结果：Impressions +10.332%，Revenue +8.234%，对应快手平台数亿元人民币的年化商业收入。此外，OneReason 实现了 ROI > 5。
+![Table 18 | Online A/B experiment results on Kuaishou local-life ads scenario.](translate-OneReason-assets/table_18.png)
 
 ---
 
@@ -442,3 +444,46 @@ SFT 轨迹停留在表面 IP 层面（和平精英→更多和平精英），每
 
 感谢 Gaoguo Sun、Peng Zhang、Lixing Zhao、Xinyu Zhang、Xinyue Zhang、Xun Zheng、Zheng Wang 对数据收集和深刻建议的贡献。
 
+---
+
+## 附录表格（Appendix Tables）
+
+以下表格来自论文附录部分，包含详细的数据统计、实验结果和补充材料。
+
+![Table 2](translate-OneReason-assets/table_2.png)
+
+![Table 3](translate-OneReason-assets/table_3.png)
+
+![Table 4](translate-OneReason-assets/table_4.png)
+
+![Table 5](translate-OneReason-assets/table_5.png)
+
+![Table 6](translate-OneReason-assets/table_6.png)
+
+![Table 8](translate-OneReason-assets/table_8.png)
+
+![Table 10](translate-OneReason-assets/table_10.png)
+
+![Table 12](translate-OneReason-assets/table_12.png)
+
+![Table 13](translate-OneReason-assets/table_13.png)
+
+![Table 19](translate-OneReason-assets/table_19.png)
+
+![Table 20](translate-OneReason-assets/table_20.png)
+
+![Table 21](translate-OneReason-assets/table_21.png)
+
+![Table 22](translate-OneReason-assets/table_22.png)
+
+![Table 23](translate-OneReason-assets/table_23.png)
+
+![Table 24](translate-OneReason-assets/table_24.png)
+
+![Table 25](translate-OneReason-assets/table_25.png)
+
+![Table 26](translate-OneReason-assets/table_26.png)
+
+![Table 27](translate-OneReason-assets/table_27.png)
+
+![Table 28](translate-OneReason-assets/table_28.png)

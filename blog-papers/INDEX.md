@@ -1,6 +1,6 @@
 # 论文精读知识库索引
 
-> 自动维护，每次精读后更新。共 **23** 篇。
+> 自动维护，每次精读后更新。共 **24** 篇。
 > 检索方式：Ctrl+F 搜索关键词、标签、作者、机构。
 
 ---
@@ -32,6 +32,7 @@
 | 21 | DRQ | Shopee | 2026-06-01 | `Semantic ID` `向量量化` `诊断框架` | Weak Accept | [→](paper-DRQ.md) |
 | 22 | DS-MLP | 人大 & 字节 & 美团 | 2026-06-03 | `CTR预估` `知识蒸馏` `双流MLP` `特征交互` | Weak Accept | [→](paper-DS-MLP.md) |
 | 23 | OneReason | 快手 | 2026-06-04 | `生成式推荐` `推荐推理` `CoT` `itemic token` | Strong Accept | [→](paper-OneReason.md) |
+| 24 | CaLIR | 北航 & 美团 | 2026-06-05 | `生成式检索` `潜在推理` `类目引导` `电商搜索` | Weak Accept 偏 Accept | [→](paper-CaLIR.md) |
 
 ---
 
@@ -629,6 +630,31 @@
   ```
 - **文件**：[paper-OneReason.md](paper-OneReason.md)
 
+### [CaLIR] Beyond Matching: Category-Guided Latent Intent Reasoning for Generative Retrieval in E-Commerce
+
+- **arXiv**：2606.07075
+- **机构**：北航 & 美团（FUWEI ZHANG 等）
+- **发表**：Under Review（2026-06-05）
+- **日期**：2026-06-08（精读日期）
+- **领域标签**：`生成式检索` `潜在意图推理` `类目引导` `电商搜索` `Semantic ID`
+- **技术标签**：`连续潜在推理` `HSR层级语义推理` `QRE多正例InfoNCE` `RCD推理感知约束解码` `类目层级脚手架` `动态前缀树` `RQ-VAE` `显式CoT对照实验`
+- **核心增量**：不让模型把推理“说出来”，而是在 SID 生成前插入固定 L 步连续隐状态推理，用商品类目层级（粗→细）逐层监督这些隐状态（HSR）、用多正例对比损失容纳多意图（QRE）、推理时用预测类目动态拼前缀树约束解码（RCD）；潜在推理整 batch 跑一次、不随 beam 翻倍，故比显式 CoT 快且效果更好。
+- **博导判决**：Weak Accept 偏 Accept（问题真、方法自洽、实验诚意足，尤其 RQ4 用实验证明显式 CoT 在电商检索里最差、RQ8 的 random 对照很讲究；扣分项是单点创新密度一般、缺真实在线 A/B）
+- **关联论文**：OneReason（同为生成式推荐推理，但走显式 CoT，CaLIR 的 RQ4 正好反驳“显式推理有用”）、TIGER（基础框架与主要基线）、MERGE/CAT-ID²/HierGR（同团队前作，作为组件被引）、Coconut（连续潜在推理范式源头）
+- **BibTeX**：
+```bibtex
+@article{zhang2026calir,
+title         = {Beyond Matching: Category-Guided Latent Intent Reasoning for Generative Retrieval in E-Commerce},
+author        = {Zhang, Fuwei and Liu, Xiaoyu and Zhang, Zhao and Zhuang, Fuzhen and others},
+journal       = {arXiv preprint},
+year          = {2026},
+eprint        = {2606.07075},
+archivePrefix = {arXiv},
+primaryClass  = {cs.IR}
+}
+```
+- **文件**：[paper-CaLIR.md](paper-CaLIR.md)
+
 ---
 
 ## 主题聚类
@@ -645,8 +671,8 @@ DeGRe
 ### 🔷 召回排序全栈统一
 UniPinRec
 
-### 🧠 生成式推荐推理
-OneReason
+### 🧠 生成式推荐/检索推理
+OneReason（显式 CoT）· CaLIR（隐式潜在推理）
 
 ### 🟡 基础架构创新（LLM/生成模型）
 Attention Residuals · ELF
@@ -699,3 +725,6 @@ DAGFM（DAG 因子机缩小 Teacher-Student 差距）→ ECKD（多 Teacher 集�
 
 **生成式推荐“思考”演进**：
 OneRec（只会一口气生成，System-1）→ OneRec-Think/OpenOneRec（硬接 CoT，但思考模式≤不思考）→ **OneReason（感知+认知地基 + specialize-then-unify，首次思考模式>不思考）**
+
+**显式 vs 隐式推理的岔路**：
+显式 CoT（OneReason：可解释可纠错，适合对话场景，靠大预训+RL 硬做出“思考>不思考”）↔ 隐式潜在推理（**CaLIR**：延迟敏感、目标空间是人造 SID 的电商检索场景，RQ4 直接实验证明显式 CoT 最差）→ 不是“推理有没有用”，而是“什么场景用什么形式推理”

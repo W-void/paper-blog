@@ -128,13 +128,19 @@ graph TD
     OpenOneRec["OneRec-Think/OpenOneRec\n硬接CoT，思考≤不思考\n快手 2025-26"]
     TIGER2["TIGER/LC-Rec\nitemic token基础+对比基线\nNeurIPS'23 / ICDE'24"]
     OneReason["OneReason ★\n感知+认知地基+specialize-then-unify\n首次思考>不思考\n快手 2026"]
+    CaLIR["CaLIR ★\n类目引导潜在意图推理\n隐式推理+动态前缀树约束解码\n北航&美团 2026"]
+    Coconut["Coconut\n连续潜在推理范式\nHao et al. 2024"]
 
     OneRecBase -->|"System-1→加入思考"| OpenOneRec
     OpenOneRec -->|"诊断思考失效，补感知+认知地基"| OneReason
     TIGER2 -->|"itemic token基础与对比基线"| OneReason
+    TIGER2 -->|"基础框架与主要基线"| CaLIR
     OneRecBase -.->|"同源体系，线上Fast-Slow协同"| OneReason
     DiffeRank -.->|"同为表示/推理能力分析，跨领域"| OneReason
     HSTU2 -.->|"ID-based对比基线"| OneReason
+    Coconut -->|"连续潜在推理范式启发"| CaLIR
+    RQVAE -->|"SID量化基础"| CaLIR
+    OneReason -.->|"显式CoT vs 隐式潜在推理\nCaLIR RQ4证明显式CoT最差"| CaLIR
 
     %% 自监督视觉表示学习谱系
     DeepCluster["DeepCluster\n离线聚类自监督\nFBAI 2018"]
@@ -415,6 +421,31 @@ OneRec-Think 和 OpenOneRec 都是快手在生成式推荐里接入文本 CoT �
 **关系类型**：跨领域呼应——都在问“模型是否真的掌握了结构”
 
 Diff-eRank 用表示有效秩的变化量量化 LLM 的“降噪能力”，是一种对表示质量的内在衡量；OneReason 的 R0–R3 诊断阶梯本质上也是在问“模型是否真的“感知+认知”到了推荐对象”。两者理路同构：表面的损失/准确率不够，要拆到能力的“地基层”去诊断。OneReason 的四准则 CoT 诊断框架（ΔLL/ℓ_t/γ_legal/γ_hist）与 Diff-eRank 的“用可量化指标看穿黑盒”精神一致。
+
+---
+
+### CaLIR ↔ OneReason
+**关系类型**：同为"生成式推荐/检索推理"，但走完全相反的路线——显式 CoT vs 隐式潜在推理
+
+OneReason（快手）走显式 CoT 路线：靠 578B 预训练补感知地基 + specialize-then-unify RL 调思考，第一次让"思考模式 > 不思考"在推荐场景成立。CaLIR（北航美团）走隐式潜在推理路线：在 SID 生成前插入 L 步连续隐状态，用类目层级逐层监督，不输出任何推理 token。
+
+最关键的对照：CaLIR 的 RQ4 直接做了显式 CoT 对照实验，结果显式 CoT（R@100=24.05）是三种方案中最差的，甚至比不推理的 TIGER（25.98）还差。这和 OneReason 的"思考 > 不思考"形成了有趣的张力——但两者的场景不同：OneReason 是推荐（用户行为序列→物品），CaLIR 是电商检索（自然语言查询→物品 SID）。这暗示：**显式推理在"行为→兴趣"的认知跳跃中有价值（OneReason），但在"查询→SID"的编码跳跃中反而有害（CaLIR）。** 场景决定推理形式。
+
+---
+
+### CaLIR ↔ TIGER
+**关系类型**：CaLIR 是 TIGER 的直接改进，TIGER 是 CaLIR 的基础框架和主要基线
+
+TIGER 建立了"RQ-VAE 量化 SID + T5 自回归生成"的基础范式。CaLIR 完全继承这个框架，但在 T5 解码器的"查询编码→SID 生成"之间插入了一段潜在推理缓冲区。CaLIR 的消融实验（RQ2）中 `w/ empty reasoning` 几乎等于 TIGER（R@100: 26.38 vs 25.98），干净地证明了"光有框架没有推理监督 ≈ TIGER"。
+
+关键数字：CaLIR R@100=36.15 vs TIGER R@100=25.98，相对提升 39.1%，延迟仅增加 14.7%（0.296s vs 0.258s），参数只多 5%。
+
+---
+
+### CaLIR ↔ Coconut
+**关系类型**：Coconut 是 CaLIR 的"连续潜在推理"范式源头
+
+Coconut（Hao et al. 2024）首先提出"在 Transformer 解码器中用连续隐状态替代显式 CoT token"的思路，证明了在数学推理等任务上，连续潜在推理可以比显式 CoT 更高效。CaLIR 把这个范式迁移到电商生成式检索，核心创新在于"用什么去监督这些潜在状态"——Coconut 用任务损失端到端训练，CaLIR 用商品类目层级逐层监督（HSR）+ 多正例对比（QRE），给潜在状态提供了结构化的 grounding。
 
 ---
 
