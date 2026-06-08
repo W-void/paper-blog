@@ -1,6 +1,6 @@
 # 论文精读知识库索引
 
-> 自动维护，每次精读后更新。共 **24** 篇。
+> 自动维护，每次精读后更新。共 **25** 篇。
 > 检索方式：Ctrl+F 搜索关键词、标签、作者、机构。
 
 ---
@@ -33,6 +33,7 @@
 | 22 | DS-MLP | 人大 & 字节 & 美团 | 2026-06-03 | `CTR预估` `知识蒸馏` `双流MLP` `特征交互` | Weak Accept | [→](paper-DS-MLP.md) |
 | 23 | OneReason | 快手 | 2026-06-04 | `生成式推荐` `推荐推理` `CoT` `itemic token` | Strong Accept | [→](paper-OneReason.md) |
 | 24 | CaLIR | 北航 & 美团 | 2026-06-05 | `生成式检索` `潜在推理` `类目引导` `电商搜索` | Weak Accept 偏 Accept | [→](paper-CaLIR.md) |
+| 25 | Gated Attention | Qwen Team, Alibaba | 2025-06-11 | `LLM` `Transformer架构` `注意力门控` `Attention Sink` | Strong Accept | [→](paper-gated-attention.md) |
 
 ---
 
@@ -657,6 +658,33 @@ primaryClass  = {cs.IR}
 
 ---
 
+### [Gated Attention] Gated Attention for Large Language Models: Non-linearity, Sparsity, and Attention-Sink-Free
+
+- **arXiv**：2505.06708
+- **机构**：Qwen Team, Alibaba Group（Zihan Qiu, Junyang Lin 等）
+- **发表**：arXiv 预印本（v2 2025-06-11）
+- **日期**：2026-06-08（精读日期）
+- **领域标签**：`LLM` `Transformer架构` `注意力门控` `Attention Sink` `长上下文`
+- **技术标签**：`G1-G5设计空间` `head-specific sigmoid门` `非线性注入` `数据依赖稀疏` `massive activation压制` `attention-sink-free`
+- **核心增量**：把"注意力里加门控"这个工业界民间 trick 系统化——扫了 5 个注入位置（G1-G5）× 3 个维度（粒度/共享/激活），定论 G1（SDPA 输出后）+ head-specific + elementwise + sigmoid 乘性门最优；并把门控收益拆成两个正交机制：非线性（打破 value→输出 的线性通路）+ 数据依赖稀疏（平均门控分数 0.116）。最漂亮的发现是 sigmoid 门提供了 softmax 给不了的"输出 0 的逃生阀"，使首 token 注意力 46.7%→4.8%，attention sink 被结构性消除；massive activation 1053→94，RULER-128k 58.82 vs 31.65。开销 <2% 参数、吞吐无损。
+- **博导判决**：Strong Accept（设计空间扫得彻底诚实、机理解释有控制实验支撑、数字过硬、落地成本几乎为零；扣分项：两机制定量贡献占比偏定性、规模上限 1.7B、缺与 StreamingLLM 等 sink 缓解方案同台对比）
+- **关联论文**：Attention Residuals（同为 attention 内部结构改造，互补路线）、StreamingLLM（attention sink "管理派"，本文是"消除派"）、GLA/Gated DeltaNet/Mamba2（线性注意力门控，本文把机理讲清后可反哺）
+- **BibTeX**：
+```bibtex
+@article{qiu2025gated,
+  title         = {Gated Attention for Large Language Models: Non-linearity, Sparsity, and Attention-Sink-Free},
+  author        = {Qiu, Zihan and Wang, Zekun and Zheng, Bo and Huang, Zeyu and Huang, Fei and Lin, Junyang and others},
+  journal       = {arXiv preprint},
+  year          = {2025},
+  eprint        = {2505.06708},
+  archivePrefix = {arXiv},
+  primaryClass  = {cs.CL}
+}
+```
+- **文件**：[paper-gated-attention.md](paper-gated-attention.md)
+
+---
+
 ## 主题聚类
 
 ### 🔵 Semantic ID 方向
@@ -675,7 +703,7 @@ UniPinRec
 OneReason（显式 CoT）· CaLIR（隐式潜在推理）
 
 ### 🟡 基础架构创新（LLM/生成模型）
-Attention Residuals · ELF
+Attention Residuals · ELF · Gated Attention
 
 ### 🔴 AI 科研自动化 / Agentic 系统
 AutoSOTA · harness-design · claude-code-arch
@@ -701,6 +729,9 @@ KAR/SeRALM（固定 prompt + 无约束融合）→ **LWGR（个性化软指令 +
 
 **深度维度信息流**：
 标准残差（固定权重累加）→ **Attention Residuals（softmax注意力替换残差）**
+
+**注意力门控演进**：
+标准softmax注意力（权重必须和为1，被迫产生attention sink）→ 工业界民间门控trick（加了涨点不知为何，Qwen/Gemma内部用）→ **Gated Attention（系统化G1-G5设计空间，机理=非线性+数据依赖稀疏，sigmoid门可输出0→消除attention sink）**
 
 **连续语言扩散模型**：
 离散DLM（MDLM等）→ 连续DLM（有per-step离散监督）→ **ELF（无离散约束+共享decoder）**

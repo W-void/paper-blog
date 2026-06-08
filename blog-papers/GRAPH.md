@@ -47,9 +47,15 @@ graph TD
     AttnRes["Attention Residuals ★\n深度维度注意力\nKimi 2026"]
     ContDLM["连续DLM\n有per-step离散监督"]
     ELF["ELF ★\n无约束Flow Matching\nMIT 2026"]
+    SoftmaxAttn["标准softmax注意力\n权重必须和为1→sink"]
+    GatedTrick["工业界门控trick\n加了涨点不知为何\nQwen/Gemma内部"]
+    GatedAttn["Gated Attention ★\nG1-G5设计空间+sigmoid门\n消除attention sink\nQwen/Alibaba 2025"]
 
     Transformer -->|"深度维度问题"| AttnRes
     ContDLM -->|"去除离散约束"| ELF
+    SoftmaxAttn -->|"权重和为1→attention sink"| GatedAttn
+    GatedTrick -->|"系统化+机理化"| GatedAttn
+    AttnRes -.->|"同为attention内部结构改造\n互补路线"| GatedAttn
 
     %% AI科研自动化 / Agentic系统
     AutoSOTA["AutoSOTA ★\n端到端研究自动化\n清华等 2026"]
