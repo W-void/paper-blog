@@ -1,9 +1,16 @@
+---
+title: OneReason 技术报告（中文翻译）
+date: 2026-06-08
+slug: onereason-technical-report
+tags: [推荐系统, 生成式推荐, LLM, 思维链]
+---
+
 # OneReason 技术报告
 
 - **原标题**：OneReason Technical Report
 - **作者**：OneRec Team
 - **来源**：https://arxiv.org/pdf/2606.06260
-- **翻译日期**：2025-06-08
+- **翻译日期**：2026-06-08
 
 ---
 

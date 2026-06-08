@@ -90,6 +90,31 @@ const config: Config = {
         onUntruncatedBlogPosts: 'ignore',
       },
     ],
+    // 论文翻译
+    [
+      '@docusaurus/plugin-content-blog',
+      {
+        id: 'translate',
+        path: 'blog-translate',
+        routeBasePath: 'translate',
+        showReadingTime: true,
+        remarkPlugins: [remarkMath],
+        rehypePlugins: [rehypeKatex],
+        blogTitle: '论文翻译',
+        blogDescription: '精选论文中文翻译',
+        postsPerPage: 10,
+        blogSidebarTitle: '最近翻译',
+        blogSidebarCount: 20,
+        feedOptions: {
+          type: ['rss', 'atom'],
+          xslt: true,
+          title: '论文翻译',
+        },
+        onInlineTags: 'warn',
+        onInlineAuthors: 'warn',
+        onUntruncatedBlogPosts: 'ignore',
+      },
+    ],
     // arXiv 日报
     [
       '@docusaurus/plugin-content-blog',
@@ -141,8 +166,9 @@ const config: Config = {
       items: [
         {to: '/papers', label: '📄 最近精读', position: 'left'},
         {to: '/wechat', label: '📱 公众号', position: 'left'},
+        {to: '/translate', label: '🌐 论文翻译', position: 'left'},
         {to: '/arxiv', label: '📰 arXiv 日报', position: 'left'},
-        {to: '/papers/tags', label: '🏷️ 标签', position: 'left'},
+        // {to: '/papers/tags', label: '🏷️ 标签', position: 'left'},
         {
           href: 'https://github.com/W-void/paper-blog',
           label: 'GitHub',
@@ -158,6 +184,7 @@ const config: Config = {
           items: [
             {label: '最近精读', to: '/papers'},
             {label: '公众号', to: '/wechat'},
+            {label: '论文翻译', to: '/translate'},
             {label: 'arXiv 日报', to: '/arxiv'},
           ],
         },
