@@ -16,6 +16,9 @@ const config: Config = {
   projectName: 'paper-blog',
   trailingSlash: false,
 
+  // 客户端模块：图片懒加载 + 滚动进度条
+  clientModules: ['./src/clientModules/imageOptimize.ts'],
+
   onBrokenLinks: 'warn',
   markdown: {
     format: 'md',

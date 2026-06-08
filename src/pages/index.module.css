@@ -1,0 +1,288 @@
+/* ========================================
+   首页样式
+   ======================================== */
+
+.main {
+  overflow: hidden;
+}
+
+/* ── Hero 区 ── */
+.hero {
+  position: relative;
+  padding: 80px 24px 96px;
+  background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+  overflow: hidden;
+  text-align: center;
+}
+
+.heroInner {
+  position: relative;
+  z-index: 2;
+  max-width: 720px;
+  margin: 0 auto;
+}
+
+.heroBadge {
+  display: inline-block;
+  background: rgba(255, 255, 255, 0.12);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  color: rgba(255, 255, 255, 0.85);
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 1.5px;
+  padding: 6px 16px;
+  border-radius: 20px;
+  margin-bottom: 24px;
+  text-transform: uppercase;
+  backdrop-filter: blur(4px);
+}
+
+.heroTitle {
+  font-size: clamp(32px, 6vw, 56px);
+  font-weight: 900;
+  color: #fff !important;
+  line-height: 1.2;
+  margin-bottom: 16px;
+  letter-spacing: -1px;
+}
+
+.heroAccent {
+  background: linear-gradient(90deg, #748ffc, #da77f2);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.heroSubtitle {
+  font-size: 17px;
+  color: rgba(255, 255, 255, 0.65);
+  line-height: 1.7;
+  margin-bottom: 36px;
+}
+
+.heroActions {
+  display: flex;
+  justify-content: center;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.heroCta {
+  display: inline-block;
+  background: linear-gradient(90deg, #3b5bdb, #748ffc);
+  color: #fff !important;
+  font-size: 15px;
+  font-weight: 700;
+  padding: 12px 28px;
+  border-radius: 8px;
+  text-decoration: none !important;
+  transition: transform 0.2s, box-shadow 0.2s;
+  box-shadow: 0 4px 20px rgba(59, 91, 219, 0.45);
+}
+.heroCta:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 28px rgba(59, 91, 219, 0.6);
+}
+
+.heroSecondary {
+  display: inline-block;
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  color: rgba(255, 255, 255, 0.85) !important;
+  font-size: 15px;
+  font-weight: 600;
+  padding: 12px 28px;
+  border-radius: 8px;
+  text-decoration: none !important;
+  transition: background 0.2s, border-color 0.2s;
+  backdrop-filter: blur(4px);
+}
+.heroSecondary:hover {
+  background: rgba(255, 255, 255, 0.18);
+  border-color: rgba(255, 255, 255, 0.4);
+}
+
+/* 装饰光斑 */
+.heroDecor {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  pointer-events: none;
+}
+.decor1 {
+  position: absolute;
+  top: -80px;
+  right: -80px;
+  width: 320px;
+  height: 320px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(116, 143, 252, 0.2) 0%, transparent 70%);
+}
+.decor2 {
+  position: absolute;
+  bottom: -60px;
+  left: -60px;
+  width: 260px;
+  height: 260px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(218, 119, 242, 0.15) 0%, transparent 70%);
+}
+.decor3 {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 600px;
+  height: 600px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(59, 91, 219, 0.06) 0%, transparent 70%);
+}
+
+/* ── 公共布局 ── */
+.container {
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 0 24px;
+}
+
+.sectionTitle {
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: var(--ifm-color-content-secondary);
+  margin-bottom: 24px;
+}
+
+/* ── 频道卡片区 ── */
+.channels {
+  padding: 64px 0 56px;
+}
+
+.channelGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 16px;
+}
+
+.channelCard {
+  display: flex;
+  flex-direction: column;
+  padding: 24px;
+  border-radius: 14px;
+  border: 1px solid var(--ifm-color-emphasis-200);
+  background: var(--ifm-background-surface-color);
+  text-decoration: none !important;
+  transition: transform 0.2s, box-shadow 0.2s, border-color 0.2s;
+  position: relative;
+  overflow: hidden;
+}
+.channelCard::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: var(--card-accent, #3b5bdb);
+  border-radius: 14px 14px 0 0;
+  opacity: 0;
+  transition: opacity 0.2s;
+}
+.channelCard:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.1);
+  border-color: var(--card-accent, #3b5bdb);
+}
+.channelCard:hover::before {
+  opacity: 1;
+}
+
+[data-theme='dark'] .channelCard {
+  background: #1c1f2e;
+  border-color: #2a2d4a;
+}
+[data-theme='dark'] .channelCard:hover {
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.4);
+}
+
+.channelEmoji {
+  font-size: 28px;
+  margin-bottom: 12px;
+}
+
+.channelTitle {
+  font-size: 17px;
+  font-weight: 700;
+  color: var(--ifm-color-content);
+  margin-bottom: 8px;
+}
+
+.channelDesc {
+  font-size: 13.5px;
+  color: var(--ifm-color-content-secondary);
+  line-height: 1.6;
+  flex: 1;
+}
+
+.channelArrow {
+  font-size: 18px;
+  color: var(--card-accent, #3b5bdb);
+  margin-top: 16px;
+  font-weight: 700;
+  transition: transform 0.2s;
+}
+.channelCard:hover .channelArrow {
+  transform: translateX(4px);
+}
+
+/* ── 热门话题区 ── */
+.topics {
+  padding: 0 0 64px;
+}
+
+.topicList {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.topicTag {
+  display: inline-block;
+  padding: 7px 16px;
+  background: var(--ifm-color-emphasis-100);
+  border: 1px solid var(--ifm-color-emphasis-200);
+  border-radius: 20px;
+  font-size: 13.5px;
+  color: var(--ifm-color-content) !important;
+  text-decoration: none !important;
+  font-weight: 500;
+  transition: background 0.2s, border-color 0.2s, color 0.2s;
+}
+.topicTag:hover {
+  background: var(--ifm-color-primary);
+  border-color: var(--ifm-color-primary);
+  color: #fff !important;
+}
+
+[data-theme='dark'] .topicTag {
+  background: #1c1f2e;
+  border-color: #2a2d4a;
+}
+[data-theme='dark'] .topicTag:hover {
+  background: var(--ifm-color-primary);
+  border-color: var(--ifm-color-primary);
+}
+
+/* ── 响应式 ── */
+@media (max-width: 640px) {
+  .hero {
+    padding: 60px 20px 72px;
+  }
+  .heroTitle {
+    font-size: 28px;
+  }
+  .channelGrid {
+    grid-template-columns: 1fr;
+  }
+}
