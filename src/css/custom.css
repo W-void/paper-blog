@@ -383,82 +383,9 @@ html {
 }
 
 /* =====================================================
-   侧边栏优化
+   侧边栏优化（样式由 swizzle 后的 CSS module 控制）
+   src/theme/BlogSidebar/Desktop/styles.module.css
    ===================================================== */
-
-/* 侧边栏容器 */
-.blogSidebar,
-[class*="blogSidebar_"] {
-  overflow: hidden;
-}
-
-/* 年份分组标题 */
-.blogSidebarItem h3,
-[class*="blogSidebarYear"],
-[class*="sidebarItemTitle"],
-.blogSidebar h3 {
-  font-size: 11px !important;
-  font-weight: 700 !important;
-  letter-spacing: 1.5px !important;
-  text-transform: uppercase !important;
-  color: var(--ifm-color-content-secondary) !important;
-  margin: 16px 0 6px 10px !important;
-  padding: 0 !important;
-  opacity: 0.6;
-}
-
-/* 每条目录项 */
-.blogSidebarItem {
-  font-size: 13px;
-  line-height: 1.4;
-}
-
-.blogSidebarItem a {
-  border-radius: 6px;
-  padding: 5px 10px;
-  display: block;
-  transition: background 0.15s, color 0.15s;
-  color: var(--ifm-color-content-secondary) !important;
-  text-decoration: none !important;
-  /* 单行截断，悬停时通过 title 属性显示完整标题 */
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  max-width: 100%;
-}
-
-.blogSidebarItem a:hover {
-  background: var(--ifm-color-emphasis-100);
-  color: var(--ifm-color-primary) !important;
-  /* hover 时展开完整标题 */
-  white-space: normal;
-  overflow: visible;
-  text-overflow: unset;
-  position: relative;
-  z-index: 10;
-  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.1);
-}
-
-[data-theme='dark'] .blogSidebarItem a:hover {
-  background: rgba(255, 255, 255, 0.06);
-  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.35);
-}
-
-/* 侧边栏标题（"公众号文章" 等） */
-[class*="blogSidebarTitle"],
-.blogSidebarTitle {
-  font-size: 13px !important;
-  font-weight: 700 !important;
-  letter-spacing: 0.3px !important;
-  margin-bottom: 10px !important;
-  padding-bottom: 8px !important;
-  border-bottom: 1px solid var(--ifm-color-emphasis-200) !important;
-}
-
-[data-theme='dark'] [class*="blogSidebarTitle"],
-[data-theme='dark'] .blogSidebarTitle {
-  border-bottom-color: rgba(255, 255, 255, 0.08) !important;
-}
 
 /* =====================================================
    图片懒加载与渐进效果

@@ -1,0 +1,81 @@
+.sidebar {
+  max-height: calc(100vh - (var(--ifm-navbar-height) + 2rem));
+  overflow-y: auto;
+  overflow-x: hidden;
+  position: sticky;
+  top: calc(var(--ifm-navbar-height) + 2rem);
+}
+
+/* 侧边栏大标题（"最近精读"、"公众号文章" 等） */
+.sidebarItemTitle {
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.3px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid var(--ifm-color-emphasis-200);
+  color: var(--ifm-color-content);
+}
+
+/* 列表整体字号 */
+.sidebarItemList {
+  font-size: 13px;
+}
+
+/* 每一个列表项，减小上方间距让列表更紧凑 */
+.sidebarItem {
+  margin-top: 2px;
+}
+
+/* 每条链接：单行截断 */
+.sidebarItemLink {
+  display: block;
+  color: var(--ifm-color-content-secondary);
+  border-radius: 6px;
+  padding: 5px 8px;
+  line-height: 1.4;
+  transition: background 0.15s, color 0.15s;
+
+  /* 单行截断核心 */
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.sidebarItemLink:hover {
+  text-decoration: none;
+  background: var(--ifm-color-emphasis-100);
+  color: var(--ifm-color-primary);
+
+  /* hover 展开完整标题 */
+  white-space: normal;
+  overflow: visible;
+  word-break: break-word;
+}
+
+[data-theme='dark'] .sidebarItemLink:hover {
+  background: rgba(255, 255, 255, 0.06);
+}
+
+.sidebarItemLinkActive {
+  color: var(--ifm-color-primary) !important;
+  font-weight: 600;
+}
+
+@media (max-width: 996px) {
+  .sidebar {
+    display: none;
+  }
+}
+
+/* 年份分组标题（2026 / 2025 等） */
+.yearGroupHeading {
+  font-size: 11px !important;
+  font-weight: 700 !important;
+  letter-spacing: 1.5px !important;
+  text-transform: uppercase !important;
+  color: var(--ifm-color-content-secondary) !important;
+  opacity: 0.55;
+  margin-top: 18px !important;
+  margin-bottom: 4px !important;
+  padding: 0 8px !important;
+}
