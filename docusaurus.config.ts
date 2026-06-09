@@ -168,7 +168,7 @@ const config: Config = {
       },
       items: [
         {to: '/papers', label: '📄 最近精读', position: 'left'},
-        {to: '/wechat', label: '📱 公众号', position: 'left'},
+        {to: '/wechat', label: '📱 公众号·猫的薛定谔007', position: 'left'},
         {to: '/translate', label: '🌐 论文翻译', position: 'left'},
         {to: '/arxiv', label: '📰 推荐系统日报', position: 'left'},
         // {to: '/papers/tags', label: '🏷️ 标签', position: 'left'},
@@ -186,7 +186,7 @@ const config: Config = {
           title: '内容',
           items: [
             {label: '最近精读', to: '/papers'},
-            {label: '公众号', to: '/wechat'},
+            {label: '公众号·猫的薛定谔007', to: '/wechat'},
             {label: '论文翻译', to: '/translate'},
             {label: '推荐系统日报', to: '/arxiv'},
           ],

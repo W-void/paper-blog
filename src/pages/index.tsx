@@ -33,8 +33,8 @@ const channels: ChannelCardProps[] = [
   },
   {
     emoji: '📱',
-    title: '公众号文章',
-    description: '公众号存档，技术随笔与论文串讲',
+    title: '公众号·猫的薛定谔007',
+    description: '公众号「猫的薛定谔007」存档，技术随笔与论文串讲',
     href: '/wechat',
     color: '#0ca678',
   },
