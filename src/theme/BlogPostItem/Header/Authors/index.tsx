@@ -21,79 +21,83 @@ export default function BlogPostItemHeaderAuthors() {
   // 没有 authors 时 fallback 到默认作者
   const authors = rawAuthors.length > 0 ? rawAuthors : [DEFAULT_AUTHOR];
 
-  // 列表页只用简洁小头像行，不展开卡片
+  // 列表页：只显示紧凑小行
   if (!isBlogPostPage) {
     return (
       <div className={styles.compactRow}>
         {authors.map((author, idx) => {
-          const imageURL = (rawAuthors.length > 0 ? assets.authorsImageUrls?.[idx] : null) ?? author.imageURL;
-          const link = author.url || (author.email && `mailto:${author.email}`) || undefined;
+          const imageURL =
+            (rawAuthors.length > 0 ? assets.authorsImageUrls?.[idx] : null) ??
+            author.imageURL;
           return (
             <span key={idx} className={styles.compactAuthor}>
               {imageURL && (
                 <img src={imageURL} alt={author.name} className={styles.compactAvatar} />
               )}
-              {link ? (
-                <Link href={link} className={styles.compactName}>{author.name}</Link>
-              ) : (
-                <span className={styles.compactName}>{author.name}</span>
-              )}
+              <span className={styles.compactName}>{author.name}</span>
             </span>
           );
         })}
-        {date && (
-          <span className={styles.compactMeta}>
-            · {new Date(date).toLocaleDateString('zh-CN', { year: 'numeric', month: 'long', day: 'numeric' })}
-          </span>
-        )}
-        {readingTime && (
-          <span className={styles.compactMeta}>· 约 {Math.ceil(readingTime)} 分钟</span>
-        )}
       </div>
     );
   }
 
-  // 文章详情页：展示完整作者卡片
+  // 文章详情页：完整作者卡片，重点展示邮箱
   return (
     <div className={styles.authorCard}>
       {authors.map((author, idx) => {
-        const imageURL = (rawAuthors.length > 0 ? assets.authorsImageUrls?.[idx] : null) ?? author.imageURL;
-          const link = author.url || (author.email && `mailto:${author.email}`) || undefined;
-          return (
-            <div key={idx} className={styles.authorInner}>
+        const imageURL =
+          (rawAuthors.length > 0 ? assets.authorsImageUrls?.[idx] : null) ??
+          author.imageURL;
+        return (
+          <div key={idx} className={styles.authorInner}>
+            {/* 头像 */}
             {imageURL && (
-              <Link href={link ?? '#'} className={styles.avatarWrap}>
+              <Link href={author.url ?? `mailto:${author.email}`} className={styles.avatarWrap}>
                 <img src={imageURL} alt={author.name} className={styles.avatar} />
               </Link>
             )}
+
+            {/* 信息区 */}
             <div className={styles.info}>
+              {/* 姓名 + 标签 */}
               <div className={styles.nameRow}>
-                {link ? (
-                  <Link href={link} className={styles.name}>{author.name}</Link>
-                ) : (
-                  <span className={styles.name}>{author.name}</span>
-                )}
+                <span className={styles.name}>{author.name}</span>
                 {author.title && <span className={styles.badge}>{author.title}</span>}
               </div>
+
+              {/* 邮箱（重点显示） */}
+              {author.email && (
+                <div className={styles.emailRow}>
+                  <Link href={`mailto:${author.email}`} className={styles.emailLink}>
+                    ✉️ {author.email}
+                  </Link>
+                </div>
+              )}
+
+              {/* 日期 + 阅读时间 */}
               <div className={styles.metaRow}>
                 {date && (
                   <span className={styles.metaItem}>
-                    🗓 {new Date(date).toLocaleDateString('zh-CN', { year: 'numeric', month: 'long', day: 'numeric' })}
+                    🗓 {new Date(date).toLocaleDateString('zh-CN', {
+                      year: 'numeric',
+                      month: 'long',
+                      day: 'numeric',
+                    })}
                   </span>
                 )}
                 {readingTime && (
-                  <span className={styles.metaItem}>⏱ 约 {Math.ceil(readingTime)} 分钟阅读</span>
+                  <span className={styles.metaItem}>
+                    ⏱ 约 {Math.ceil(readingTime)} 分钟阅读
+                  </span>
                 )}
               </div>
+
+              {/* GitHub 链接 */}
               <div className={styles.socialRow}>
                 {author.url && (
                   <Link href={author.url} className={styles.socialLink}>
-                    GitHub
-                  </Link>
-                )}
-                {author.email && (
-                  <Link href={`mailto:${author.email}`} className={styles.socialLink}>
-                    邮箱
+                    GitHub →
                   </Link>
                 )}
               </div>
