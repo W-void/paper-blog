@@ -1,0 +1,147 @@
+/* ── 文章详情页 作者卡片 ── */
+.authorCard {
+  margin: 16px 0 20px;
+  border-radius: 12px;
+  border: 1px solid var(--ifm-color-emphasis-200);
+  background: var(--ifm-background-surface-color);
+  padding: 16px 20px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+}
+
+[data-theme='dark'] .authorCard {
+  background: #161926;
+  border-color: #2a2d4a;
+  box-shadow: none;
+}
+
+.authorInner {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.avatarWrap {
+  flex-shrink: 0;
+}
+
+.avatar {
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  border: 2px solid var(--ifm-color-emphasis-200);
+  object-fit: cover;
+}
+
+[data-theme='dark'] .avatar {
+  border-color: #2a2d4a;
+}
+
+.info {
+  flex: 1;
+  min-width: 0;
+}
+
+.nameRow {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 4px;
+}
+
+.name {
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--ifm-color-content) !important;
+  text-decoration: none !important;
+}
+
+.name:hover {
+  color: var(--ifm-color-primary) !important;
+}
+
+.badge {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--ifm-color-primary);
+  background: rgba(59, 91, 219, 0.08);
+  border: 1px solid rgba(59, 91, 219, 0.2);
+  border-radius: 4px;
+  padding: 1px 7px;
+}
+
+[data-theme='dark'] .badge {
+  background: rgba(99, 131, 255, 0.12);
+  border-color: rgba(99, 131, 255, 0.25);
+  color: var(--ifm-color-primary-lightest);
+}
+
+.metaRow {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-bottom: 6px;
+}
+
+.metaItem {
+  font-size: 13px;
+  color: var(--ifm-color-content-secondary);
+}
+
+.socialRow {
+  display: flex;
+  gap: 10px;
+}
+
+.socialLink {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--ifm-color-primary) !important;
+  text-decoration: none !important;
+  padding: 2px 8px;
+  border-radius: 4px;
+  border: 1px solid var(--ifm-color-primary);
+  transition: all 0.15s;
+}
+
+.socialLink:hover {
+  background: var(--ifm-color-primary);
+  color: #fff !important;
+}
+
+/* ── 列表页 紧凑行 ── */
+.compactRow {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin: 6px 0 10px;
+  font-size: 13.5px;
+}
+
+.compactAuthor {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.compactAvatar {
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+.compactName {
+  font-weight: 600;
+  color: var(--ifm-color-content) !important;
+  text-decoration: none !important;
+}
+
+.compactName:hover {
+  color: var(--ifm-color-primary) !important;
+}
+
+.compactMeta {
+  color: var(--ifm-color-content-secondary);
+  font-size: 13px;
+}
