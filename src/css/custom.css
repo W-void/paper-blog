@@ -115,44 +115,36 @@ html {
 
 .markdown h2 {
   font-size: 1.5rem;
-  font-weight: 700;
+  font-weight: 800;
   margin-top: 2.8rem;
   margin-bottom: 1rem;
-  padding-bottom: 0.45rem;
-  border-bottom: 2px solid var(--ifm-color-emphasis-200);
+  padding-left: 14px;
+  padding-bottom: 0;
+  border-bottom: none;
+  border-left: 4px solid #e53935;
   letter-spacing: -0.3px;
+  line-height: 1.4;
+  color: #1a1a2e;
 }
 
 [data-theme='dark'] .markdown h2 {
-  border-bottom-color: rgba(255, 255, 255, 0.1);
+  color: rgba(255, 255, 255, 0.92);
+  border-left-color: #ff6b6b;
 }
 
 .markdown h3 {
-  font-size: 1.2rem;
+  font-size: 1.15rem;
   font-weight: 700;
   margin-top: 2rem;
   margin-bottom: 0.75rem;
+  color: #1a1a2e;
 }
 
-.markdown h4 {
-  font-size: 1.05rem;
-  font-weight: 600;
-  margin-top: 1.5rem;
+[data-theme='dark'] .markdown h3 {
+  color: rgba(255, 255, 255, 0.88);
 }
 
-/* 行内代码 */
-.markdown code {
-  background: var(--ifm-color-emphasis-100);
-  border: 1px solid var(--ifm-color-emphasis-200);
-  border-radius: 4px;
-  font-size: 0.88em;
-  padding: 1px 5px;
-}
 
-[data-theme='dark'] .markdown code {
-  background: rgba(255, 255, 255, 0.08);
-  border-color: rgba(255, 255, 255, 0.12);
-}
 
 /* 代码块 */
 .markdown pre {
@@ -165,24 +157,44 @@ html {
   border-color: rgba(255, 255, 255, 0.08);
 }
 
-/* 引用块 */
+/* 引用块 → 黄色"大白话"风格 */
 .markdown blockquote {
-  border-left: 4px solid var(--ifm-color-primary);
-  background: var(--ifm-color-emphasis-100);
-  border-radius: 0 8px 8px 0;
-  padding: 12px 20px;
+  background: linear-gradient(135deg, #fff8e1, #fff3cd);
+  border-left: 4px solid #ffc107;
+  border-radius: 0 10px 10px 0;
+  padding: 14px 20px 14px 20px;
   margin: 1.5em 0;
+  font-style: normal;
+  box-shadow: 0 2px 8px rgba(255, 193, 7, 0.1);
+  position: relative;
+}
+
+.markdown blockquote::before {
+  content: '💡';
+  display: block;
+  font-size: 11px;
+  font-weight: 700;
+  color: #f57f17;
+  letter-spacing: 1.5px;
+  margin-bottom: 6px;
   font-style: normal;
 }
 
 [data-theme='dark'] .markdown blockquote {
-  background: rgba(59, 91, 219, 0.08);
-  border-left-color: var(--ifm-color-primary-lightest);
+  background: linear-gradient(135deg, #252010, #1e1800);
+  border-left-color: #ffc107;
+  box-shadow: none;
 }
 
 .markdown blockquote p {
   margin: 0;
-  color: var(--ifm-color-content-secondary);
+  color: #5d4037;
+  font-size: 15px;
+  line-height: 1.8;
+}
+
+[data-theme='dark'] .markdown blockquote p {
+  color: #ffe082;
 }
 
 /* 表格 */
@@ -198,16 +210,18 @@ html {
 }
 
 .markdown th {
-  background: var(--ifm-color-emphasis-100);
+  background: #1a1a2e;
+  color: #fff;
   font-size: 13px;
   font-weight: 700;
   letter-spacing: 0.5px;
-  text-transform: uppercase;
   padding: 12px 16px;
+  text-align: left;
 }
 
 [data-theme='dark'] .markdown th {
-  background: rgba(255, 255, 255, 0.06);
+  background: #0d0f1e;
+  color: rgba(255, 255, 255, 0.88);
 }
 
 .markdown td {
@@ -237,6 +251,138 @@ html {
 
 .markdown li {
   margin-bottom: 0.4em;
+}
+
+/* =====================================================
+   Markdown 原生元素增强 - 无需修改 md 文件
+   ===================================================== */
+
+/* 有序列表步骤卡片风格 */
+.blogPostPage .markdown > ol {
+  list-style: none;
+  padding-left: 0;
+  counter-reset: step-counter;
+}
+
+.blogPostPage .markdown > ol > li {
+  counter-increment: step-counter;
+  position: relative;
+  padding: 16px 18px 16px 56px;
+  margin-bottom: 12px;
+  background: #f8f9ff;
+  border: 1px solid #e8eaf6;
+  border-radius: 10px;
+  border-left: 3px solid var(--ifm-color-primary);
+}
+
+.blogPostPage .markdown > ol > li::before {
+  content: counter(step-counter);
+  position: absolute;
+  left: 14px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 28px;
+  height: 28px;
+  background: var(--ifm-color-primary);
+  color: #fff;
+  border-radius: 50%;
+  font-size: 13px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+[data-theme='dark'] .blogPostPage .markdown > ol > li {
+  background: rgba(59, 91, 219, 0.06);
+  border-color: rgba(59, 91, 219, 0.2);
+  border-left-color: var(--ifm-color-primary);
+}
+
+/* 无序列表增强 */
+.blogPostPage .markdown > ul > li {
+  padding-left: 4px;
+}
+
+/* 强调文字高亮 */
+.markdown strong {
+  color: #c62828;
+  font-weight: 700;
+}
+
+[data-theme='dark'] .markdown strong {
+  color: #ff8a80;
+}
+
+/* 行内代码增强 */
+.markdown :not(pre) > code {
+  background: #fce4ec;
+  border: 1px solid #f8bbd9;
+  color: #c62828;
+  border-radius: 4px;
+  font-size: 0.87em;
+  padding: 2px 6px;
+  font-weight: 500;
+}
+
+[data-theme='dark'] .markdown :not(pre) > code {
+  background: rgba(255, 82, 82, 0.12);
+  border-color: rgba(255, 82, 82, 0.2);
+  color: #ff8a80;
+}
+
+/* 水平分割线美化 */
+.markdown hr {
+  border: none;
+  border-top: 1px solid var(--ifm-color-emphasis-200);
+  margin: 2.5em 0;
+}
+
+[data-theme='dark'] .markdown hr {
+  border-top-color: rgba(255, 255, 255, 0.08);
+}
+
+/* 图片美化：圆角 + 阴影 */
+.blogPostPage .markdown img {
+  border-radius: 10px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+  max-width: 100%;
+  margin: 1.2em auto;
+  display: block;
+}
+
+[data-theme='dark'] .blogPostPage .markdown img {
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.35);
+  opacity: 0.93;
+}
+
+/* 图片说明（alt 文字通过 figure caption 展示） */
+.blogPostPage .markdown img + em,
+.blogPostPage .markdown img + p > em:only-child {
+  display: block;
+  text-align: center;
+  font-size: 13px;
+  color: var(--ifm-color-content-secondary);
+  margin-top: -0.5em;
+  margin-bottom: 1.2em;
+}
+
+/* h4 小节标题 */
+.markdown h4 {
+  font-size: 1.0rem;
+  font-weight: 700;
+  color: #37474f;
+  margin-top: 1.5rem;
+  padding: 6px 12px;
+  background: var(--ifm-color-emphasis-100);
+  border-radius: 6px;
+  display: inline-block;
+}
+
+[data-theme='dark'] .markdown h4 {
+  color: rgba(255, 255, 255, 0.8);
+  background: rgba(255, 255, 255, 0.06);
 }
 
 /* =====================================================
