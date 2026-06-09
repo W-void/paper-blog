@@ -47,7 +47,7 @@ const channels: ChannelCardProps[] = [
   },
   {
     emoji: '📰',
-    title: 'arXiv 日报',
+    title: '推荐系统日报',
     description: '每日精选 arXiv 速览，聚焦推荐与 LLM 方向',
     href: '/arxiv',
     color: '#9c36b5',
