@@ -1,21 +1,14 @@
 import React from 'react';
-import { useBlogPost } from '@docusaurus/plugin-content-blog/client';
-import Link from '@docusaurus/Link';
 import styles from './styles.module.css';
+import Link from '@docusaurus/Link';
 
-const DEFAULT_EMAIL = 'shuliw1996@gmail.com';
+const EMAIL = 'shuliw1996@gmail.com';
 
+// 完全替换原生作者组件，只显示邮箱文字（不可点击）
 export default function BlogPostItemHeaderAuthors() {
-  const { isBlogPostPage } = useBlogPost();
-
-  // 列表页不显示
-  if (!isBlogPostPage) return null;
-
   return (
     <div className={styles.emailBar}>
-      <Link href={`mailto:${DEFAULT_EMAIL}`} className={styles.emailLink}>
-        ✉️ {DEFAULT_EMAIL}
-      </Link>
+      <span className={styles.emailText}>✉️ {EMAIL}</span>
     </div>
   );
 }

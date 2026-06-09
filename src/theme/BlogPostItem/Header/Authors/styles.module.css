@@ -1,28 +1,8 @@
 .emailBar {
-  margin: 6px 0 12px;
+  margin: 4px 0 8px;
 }
 
-.emailLink {
+.emailText {
   font-size: 13.5px;
-  font-weight: 500;
-  color: var(--ifm-color-primary) !important;
-  text-decoration: none !important;
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-  padding: 3px 10px;
-  border-radius: 6px;
-  background: rgba(59, 91, 219, 0.06);
-  border: 1px solid rgba(59, 91, 219, 0.15);
-  transition: all 0.15s;
-}
-
-.emailLink:hover {
-  background: var(--ifm-color-primary);
-  color: #fff !important;
-}
-
-[data-theme='dark'] .emailLink {
-  background: rgba(99, 131, 255, 0.1);
-  border-color: rgba(99, 131, 255, 0.2);
+  color: var(--ifm-color-content-secondary);
 }
