@@ -3,21 +3,30 @@ import { useBlogPost } from '@docusaurus/plugin-content-blog/client';
 import Link from '@docusaurus/Link';
 import styles from './styles.module.css';
 
+const DEFAULT_AUTHOR = {
+  name: 'W-void',
+  title: '作者',
+  url: 'https://github.com/W-void',
+  imageURL: 'https://github.com/W-void.png',
+  email: 'shuliw1996@gmail.com',
+};
+
 export default function BlogPostItemHeaderAuthors() {
   const {
-    metadata: { authors, date, readingTime },
+    metadata: { authors: rawAuthors, date, readingTime },
     assets,
     isBlogPostPage,
   } = useBlogPost();
 
-  if (authors.length === 0) return null;
+  // 没有 authors 时 fallback 到默认作者
+  const authors = rawAuthors.length > 0 ? rawAuthors : [DEFAULT_AUTHOR];
 
   // 列表页只用简洁小头像行，不展开卡片
   if (!isBlogPostPage) {
     return (
       <div className={styles.compactRow}>
         {authors.map((author, idx) => {
-          const imageURL = assets.authorsImageUrls?.[idx] ?? author.imageURL;
+          const imageURL = (rawAuthors.length > 0 ? assets.authorsImageUrls?.[idx] : null) ?? author.imageURL;
           const link = author.url || (author.email && `mailto:${author.email}`) || undefined;
           return (
             <span key={idx} className={styles.compactAuthor}>
@@ -48,10 +57,10 @@ export default function BlogPostItemHeaderAuthors() {
   return (
     <div className={styles.authorCard}>
       {authors.map((author, idx) => {
-        const imageURL = assets.authorsImageUrls?.[idx] ?? author.imageURL;
-        const link = author.url || (author.email && `mailto:${author.email}`) || undefined;
-        return (
-          <div key={idx} className={styles.authorInner}>
+        const imageURL = (rawAuthors.length > 0 ? assets.authorsImageUrls?.[idx] : null) ?? author.imageURL;
+          const link = author.url || (author.email && `mailto:${author.email}`) || undefined;
+          return (
+            <div key={idx} className={styles.authorInner}>
             {imageURL && (
               <Link href={link ?? '#'} className={styles.avatarWrap}>
                 <img src={imageURL} alt={author.name} className={styles.avatar} />
