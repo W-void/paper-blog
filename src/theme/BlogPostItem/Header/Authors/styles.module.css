@@ -1,8 +1,49 @@
-.emailBar {
+.metaBar {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 14px;
   margin: 4px 0 8px;
 }
 
 .emailText {
   font-size: 13.5px;
+  color: var(--ifm-color-content-secondary);
+}
+
+/* 浏览量容器 */
+.pvContainer {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 13px;
+  color: var(--ifm-color-content-secondary);
+  background: var(--ifm-color-emphasis-100);
+  border: 1px solid var(--ifm-color-emphasis-200);
+  border-radius: 20px;
+  padding: 2px 10px 2px 8px;
+  transition: background 0.15s;
+}
+
+[data-theme='dark'] .pvContainer {
+  background: rgba(255, 255, 255, 0.06);
+  border-color: rgba(255, 255, 255, 0.1);
+}
+
+.pvIcon {
+  font-size: 12px;
+  line-height: 1;
+}
+
+.pvCount {
+  font-weight: 600;
+  color: var(--ifm-color-primary);
+  font-size: 13px;
+  min-width: 18px;
+  text-align: center;
+}
+
+.pvLabel {
+  font-size: 12px;
   color: var(--ifm-color-content-secondary);
 }
