@@ -5,6 +5,16 @@ import remarkMath from 'remark-math';
 import rehypeKatex from 'rehype-katex';
 
 const config: Config = {
+  future: {
+    faster: {
+      swcJsLoader: true,
+      swcJsMinimizer: true,
+      swcHtmlMinimizer: true,
+      lightningCssMinimizer: true,
+      rspackBundler: true,
+      mdxCrossCompilerCache: true,
+    },
+  },
   title: 'W-void 的技术笔记',
   tagline: '论文精读 · 公众号 · 推荐系统日报',
   favicon: 'img/favicon.ico',
@@ -147,10 +157,8 @@ const config: Config = {
 
   stylesheets: [
     {
-      href: 'https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css',
+      href: '/paper-blog/katex.min.css',
       type: 'text/css',
-      integrity: 'sha384-nB0miv6/jRmo5UMMR1wu3Gz6NLsoTkbqJghGIsx//Rlm+ZU03BU6SQNC66uf4l5+',
-      crossorigin: 'anonymous',
     },
   ],
 
