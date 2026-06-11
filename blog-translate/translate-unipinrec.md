@@ -27,7 +27,7 @@
 
 我们将这一目标称为全栈统一（图1）：不仅共享模型架构，还共享整个流水线，包括输入格式、训练和服务基础设施。在本文中，我们实现了全栈统一并将其部署在Pinterest的生产环境中。
 
-![Figure 1: Prior methods unify the architecture but leave input format, training, and serving fragmented. Our approach unifies all four dimensions.](translate-unipinrec-assets/figure_1.png)
+![Figure 1: Prior methods unify the architecture but leave input format, training, and serving fragmented. Our approach unifies all four dimensions.](translate-unipinrec-assets/figure_1.webp)
 
 **为何全栈统一困难。** 三个挑战阻止了先前工作实现这一目标。（1）使用模式分歧（Usage Divergence）：尽管骨干架构已经趋同，计算范式仍然不同：检索必须在毫秒级延迟下对数百万候选项评分（例如通过ANN点积评分 [1]），而排序对数百个候选项评分，可以承担更丰富的逐候选项计算（例如交叉注意力 [7, 32]）。（2）训练复杂性（Training Complexity）：检索和排序使用不同的目标（全语料库上的采样softmax与小曝光集上的二分类），但先前关于下一行为预测的工作 [7, 24] 已经表明这些任务可能是互补的。然而，现有的统一模型诉诸多阶段流水线（预训练、微调、强化学习对齐）来调和它们，增加的复杂性本身就阻碍了全栈统一。（3）服务和运维挑战（Serving and Operational Challenges）：统一模型必须以比分别部署更低的成本服务，以证明变更的合理性；另一个理想属性是与现有候选生成器（如关键词、热门内容）的可组合性，保留确定统一程度的灵活性，以及独立地对每个阶段进行A/B测试和回滚。这些挑战在很大程度上尚未被探索；极少有系统在生产中部署了统一的检索-排序模型 [10, 20]。
 
@@ -123,7 +123,7 @@ $$\mathcal{L} = \mathcal{L}_{item} + \mathcal{L}_{action} \tag{5}$$
 
 （c）去噪正则化：随机掩码促使模型在动作不可用时依赖物品内容，提高推理时的泛化能力。
 
-![Figure 2: End-to-end flow of UniPinRec: a single shared backbone is trained jointly on retrieval and ranking objectives, then co-served as two Triton processes that share the user-history KV cache across stages.](translate-unipinrec-assets/figure_2.png)
+![Figure 2: End-to-end flow of UniPinRec: a single shared backbone is trained jointly on retrieval and ranking objectives, then co-served as two Triton processes that share the user-history KV cache across stages.](translate-unipinrec-assets/figure_2.webp)
 
 ### 3.2 数据基础设施（Data Infrastructure）
 
@@ -143,7 +143,7 @@ $$\mathcal{L} = \mathcal{L}_{item} + \mathcal{L}_{action} \tag{5}$$
 
 图 3 展示了本节描述的端到端协同服务拓扑。
 
-![Figure 3: Co-serving topology for UniPinRec. Retrieval and ranking are independent Triton ensemble nodes; an ANN lookup against a CPU-hosted Faiss index sits between them. ANN returns both candidate Pin IDs and their reconstructed item embeddings, sparing the ranking stage a separate embedding fetch. The shared KV pool is reused by ranking.](translate-unipinrec-assets/figure_3.png)
+![Figure 3: Co-serving topology for UniPinRec. Retrieval and ranking are independent Triton ensemble nodes; an ANN lookup against a CPU-hosted Faiss index sits between them. ANN returns both candidate Pin IDs and their reconstructed item embeddings, sparing the ranking stage a separate embedding fetch. The shared KV pool is reused by ranking.](translate-unipinrec-assets/figure_3.webp)
 
 统一模型只有在能够替代两个独立模型且不会使服务成本翻倍的情况下，才能真正实现效率收益。我们的模型设计/训练协议的两个特性使这成为可能。首先，非交错架构和统一协同训练（第 3.1.1 节）保证了相同的模型权重，并产生与候选项无关的用户表示，可以缓存一次并在各阶段间复用。其次，检索和排序阶段共享相同的物品嵌入空间，因此无需维护独立的候选表示。
 
@@ -201,7 +201,7 @@ UniPinRec（本文方法）：采用掩码动作建模的统一模型，在召�
 
 **结果。** 表 1 显示，与专用基线相比，UniPinRec 在召回（Recall@10）与排序（save Hit@3）两个任务上均取得了具有竞争力的性能。我们使用 Board More Ideas 信息流数据进行训练和评估。
 
-![Table 1: Unified joint training vs. detached pre-train / fine-tune.](translate-unipinrec-assets/table_1.png)
+![Table 1: Unified joint training vs. detached pre-train / fine-tune.](translate-unipinrec-assets/table_1.webp)
 
 在召回方面，UniPinRec 的 Recall@10 与 PinRec 持平，并有 +0.2% 的边际提升，这表明采用排序目标进行联合训练不会损害召回质量。这对部署至关重要：统一模型可以作为生产召回系统的即插即用替代方案。
 
@@ -219,11 +219,11 @@ UniPinRec（本文方法）：采用掩码动作建模的统一模型，在召�
 
 这三个杠杆在很大程度上是正交的，因此叠加使用可获得最高的端到端 3.92 倍提升。
 
-![Table 2: Eval-time forward latency for a single ranking pass](translate-unipinrec-assets/table_2.png)
+![Table 2: Eval-time forward latency for a single ranking pass](translate-unipinrec-assets/table_2.webp)
 
 我们进一步在线上条件下对 bf16 与 fp8 的最佳组合进行了基准测试，结果见表 3。我们观察到 fp8 内核的一个主要权衡是：必须等待并累积请求以形成更大的批大小，以满足 Transformer Engine 的形状约束——即展平后的前导维度 [B*S, D] 必须是 8 的倍数，这主要约束了召回前向传播中 S=1 的自回归步骤。其结果是 QPS 提升但延迟增大。在所报告的线上实验中，我们使用了 bf16，但计划在后续步骤中采用 fp8。
 
-![Table 3: Online serving wins at controlled GPU activity/budget](translate-unipinrec-assets/table_3.png)
+![Table 3: Online serving wins at controlled GPU activity/budget](translate-unipinrec-assets/table_3.webp)
 
 ### 4.3 消融实验（Ablations）
 
@@ -233,7 +233,7 @@ UniPinRec（本文方法）：采用掩码动作建模的统一模型，在召�
 
 **结果。** 表 4 显示，任意掩码都优于不掩码（$p_{mask} = 0$）。零掩码基线取得了最低的 Hit@3，证实了额外的动作预测信号与正则化都对更好的排序质量有贡献，其中 $p_{mask} = 0.2$ 取得了最佳的整体性能。更高的掩码（$p_{mask} = 0.3$）显示出收益递减，这可能是因为过于激进的掩码从用户历史中移除了过多信号。
 
-![Table 4: Effect of action masking ratio p_mask in MAM](translate-unipinrec-assets/table_4.png)
+![Table 4: Effect of action masking ratio p_mask in MAM](translate-unipinrec-assets/table_4.webp)
 
 #### 4.3.2 模型扩展的影响
 
@@ -241,7 +241,7 @@ UniPinRec（本文方法）：采用掩码动作建模的统一模型，在召�
 
 **结果。** 我们在固定序列长度为 1024 个 token 的条件下训练不同深度（2、4、8、12、24 层）的模型，并在固定 12 层模型的条件下变动序列长度（256、512、1024、2048 个 token）。两个维度均采用 $p_{mask} = 0.2$ 的 MAM。图 4 显示，性能在两个扩展轴上都持续提升，表明统一模型尚未在容量上饱和。然而，二者的成本影响存在显著差异：深度的计算成本随线性增长，而序列长度则因注意力而产生平方级成本。这使得序列长度在延迟敏感的应用中成为更严重的瓶颈，尽管两个维度都显示出持续的质量提升。更长序列带来的显著增益表明，序列压缩技术是一个有前景的方向，可以在更低成本下捕获更长上下文所带来的质量收益。
 
-![Figure 4: Hit@3 vs. relative FLOPs for depth and sequence length scaling.](translate-unipinrec-assets/figure_4.png)
+![Figure 4: Hit@3 vs. relative FLOPs for depth and sequence length scaling.](translate-unipinrec-assets/figure_4.webp)
 
 ---
 
@@ -267,7 +267,7 @@ Board More Ideas（BMI）推荐锚定到用户画板的 Pin。为实现这一点
 
 **结果。** 表 5 显示，UniPinRec 相对于 PinRec 基线提供了强劲的参与度提升，场景 save 提升 +0.95%，表明统一的召回与排序方法相比单独召回显著提升了候选质量，同时带来 +0.08% 的全站提升，证实了更好的 BMI 推荐对整体平台参与度产生了积极影响。
 
-![Table 5: Online A/B results on Board More Ideas](translate-unipinrec-assets/table_5.png)
+![Table 5: Online A/B results on Board More Ideas](translate-unipinrec-assets/table_5.webp)
 
 ### 5.3 Notifications
 
@@ -275,7 +275,7 @@ Pinterest 使用电子邮件和推送通知向用户传递相关内容。这些�
 
 **结果。** 表 6 显示，用 UniPinRec 排序器替换仅召回的 PinRec 基线，在通知参与度指标上带来了一致的增益，其中通知场景 save 的提升最大。沉默用户的推送打开提升 +1.72%，约为全体用户提升的两倍，这表明更个性化的通知推荐在召回流失用户方面尤其有效，并显著将 WAU 提升了 0.09%。
 
-![Table 6: Online A/B results on notifications](translate-unipinrec-assets/table_6.png)
+![Table 6: Online A/B results on notifications](translate-unipinrec-assets/table_6.webp)
 
 ---
 

@@ -5,7 +5,7 @@ tags: [公众号]
 ---
 
 
-![](../static/img/wechat/b84c2485-e806-49a2-b0e4-3b1a58ec3e1d-5e8c0c.png)
+![](../static/img/wechat/b84c2485-e806-49a2-b0e4-3b1a58ec3e1d-5e8c0c.webp)
 
 See Beyond a Single View: Multi-Attribution Learning Leads to Better Conversion Rate Prediction
 
@@ -22,7 +22,7 @@ https://arxiv.org/pdf/2508.15217
 # 1 背景
 
 一般归因有以下几种，first-click归因、last-click归因、线性归因（所有点击均匀分配权重）、MTA（数据驱动的多触点归因，Data-Driven Multi-Touch Attribution）
-![](../static/img/wechat/5148ecfe-71b9-482e-8eaa-f0cf7cd81108-1767bd.png)
+![](../static/img/wechat/5148ecfe-71b9-482e-8eaa-f0cf7cd81108-1767bd.webp)
 
 想象自己的业务就是上图的圆圈之一，如何干掉其他业务的圆圈，让自己的业务收益？当然，“正确”的想法应该是：同一商品我给用户推了4次，用户最后一次才点击，前面的曝光算是无效曝光吗？（举个可能不是很恰当的例子，你第四碗饭吃饱了，前三碗饭就不用吃了吗）
 
@@ -32,28 +32,28 @@ https://arxiv.org/pdf/2508.15217
 
 其实最主要的就是引入标签，本文线性和MTA方法分别比最后一次点击方法多产生42%和15%的正面样本。
 
-![](../static/img/wechat/c2b6d349-a680-4d68-988b-d56cd7e34290-d35bd2.png)
+![](../static/img/wechat/c2b6d349-a680-4d68-988b-d56cd7e34290-d35bd2.webp)
 
 感觉和多任务其实不是很像，更像是label扩充/改写，但明显作者是延续着多任务的思路。
 
-![](../static/img/wechat/05caa59b-e8b1-4abe-a74e-9a3f19db0b08-ab9de5.png)
+![](../static/img/wechat/05caa59b-e8b1-4abe-a74e-9a3f19db0b08-ab9de5.webp)
 
 主要包括两个模块：
 - 多归因聚合模块：把多归因label像多任务那样单独一个塔预测。作者这里额外引入了一个CAT标签，就是把所有标签聚合形成新的标签，用于细粒度预估。
-![](../static/img/wechat/08dd0b3d-22ca-4c52-a2bd-1f0e5af5c05b-e078f8.png)
+![](../static/img/wechat/08dd0b3d-22ca-4c52-a2bd-1f0e5af5c05b-e078f8.webp)
 
 - 目标域适应模块：把多归因塔输出的向量和target塔的向量聚合，进行预估。我认为这样给目标域一个独立塔的好处是不影响目标域的预估值偏差，这对广告业务是至关重要的。
 
 # 3 实验
 
 只和多任务模型进行了对比：
-![](../static/img/wechat/dceeeffb-3be0-42db-b1ab-5746a62ffc45-ec9225.png)
+![](../static/img/wechat/dceeeffb-3be0-42db-b1ab-5746a62ffc45-ec9225.webp)
 
 
 对于决策链路更长的（稀疏）业务，正样本引入更多，auc提升更多。
-![](../static/img/wechat/d153caa9-6ecf-472c-8be1-5a13a5f0eba1-419847.png)
+![](../static/img/wechat/d153caa9-6ecf-472c-8be1-5a13a5f0eba1-419847.webp)
 
 消融实验证明，几乎全是额外标签带来的收益：
-![](../static/img/wechat/0963c1e5-f3b0-4b98-81ad-07ba4089ccfd-60b1ae.png)
+![](../static/img/wechat/0963c1e5-f3b0-4b98-81ad-07ba4089ccfd-60b1ae.webp)
 
 所以这篇文章本质上是额外正样本的引入，缓解了稀疏现象。我更好奇的是本文的样本是如何构造的，比如额外label的周期是多少，处理当天的多次点击还是多天的多次点击？以及长决策链路业务和短决策链路业务，引入label的周期一不一样？

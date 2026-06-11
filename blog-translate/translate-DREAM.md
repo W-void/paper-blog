@@ -38,7 +38,7 @@ date_translated: "2025-07-15"
 2. **过早承诺**：监督被绑定到单一分配路径，而冷启动梯度太稀疏无法修复选择。
 3. **推理时单路径约束**：约束解码仅注册分配的SID，因此错位的冷启动物品在测试时没有替代方案。
 
-![图1: DREAM框架概览](translate-DREAM-assets/figure_1.png)
+![图1: DREAM框架概览](translate-DREAM-assets/figure_1.webp)
 
 *图1: DREAM框架概览。顶部轨迹展示了SID从脆弱的静态路径到CART候选池、UC3主SID、CPDE束路径、以及用于冷启动命中恢复的联合Trie的演化过程。CART向SID精炼注入协同信号，UC3通过多上下文投票和保守门控选择可靠候选，CPDE在有效Trie路径上执行束感知推理。*
 
@@ -242,7 +242,7 @@ CPDE通过动量EMA更新束权重：
 
 **数据集**：在三个Amazon产品评论类别上实验：Beauty、Sports and Outdoors（Sports）、Toys and Games（Toys）。应用迭代core-5用户过滤和core-3物品过滤。统一使用冻结的Llama-3-8B提取物品文本嵌入用于初始码本构建，共享RQ-VAE配置 L=4 码本和 V_l=256 码。物品交互次数 f_i <= 5 分类为冷启动，否则为暖物品。
 
-![表1: 数据集统计](translate-DREAM-assets/table_1.png)
+![表1: 数据集统计](translate-DREAM-assets/table_1.webp)
 
 *表1: 迭代核心过滤后的数据集统计。Cold%：测试目标中 f_i <= 5 的比例。三个数据集都表现出极端稀疏性（交互密度低于0.04%）和大量冷启动比例（测试目标的19-24%）。*
 
@@ -254,7 +254,7 @@ CPDE通过动量EMA更新束权重：
 
 ### 4.2 冷启动性能
 
-![表2: 冷启动物品推荐性能](translate-DREAM-assets/table_2.png)
+![表2: 冷启动物品推荐性能](translate-DREAM-assets/table_2.webp)
 
 *表2: 冷启动物品推荐性能。DREAM在三个数据集的所有18个冷启动指标上取得最佳结果，相比每指标最强基线提升4.3x到11.5x（峰值：Sports上N@50的11.5x）。*
 
@@ -268,7 +268,7 @@ CPDE通过动量EMA更新束权重：
 
 ### 4.3 整体效用和暖物品权衡
 
-![表3: 整体推荐性能](translate-DREAM-assets/table_3.png)
+![表3: 整体推荐性能](translate-DREAM-assets/table_3.webp)
 
 *表3: 整体推荐性能。粗体：最佳；下划线：第二佳。*
 
@@ -278,7 +278,7 @@ CPDE通过动量EMA更新束权重：
 
 **(3) Toys也显示强大的整体性能**：在6个整体指标中5个取得最佳结果，同时达到beam-aware冷N@10 = 0.0573。
 
-![表4: 暖物品推荐性能](translate-DREAM-assets/table_4.png)
+![表4: 暖物品推荐性能](translate-DREAM-assets/table_4.webp)
 
 *表4: 暖物品推荐性能（R@10 / N@10）。粗体：最佳；下划线：第二佳。*
 
@@ -286,7 +286,7 @@ DREAM不追求在暖指标上占主导地位：静态索引SID基线如TIGER、L
 
 ### 4.4 消融研究
 
-![表5: 消融研究](translate-DREAM-assets/table_5.png)
+![表5: 消融研究](translate-DREAM-assets/table_5.webp)
 
 *表5: 消融研究。每行从完整系统中移除一个或多个DREAM阶段。整体和冷指标为 R@10 / N@10 (x100)。*
 
@@ -296,7 +296,7 @@ DREAM不追求在暖指标上占主导地位：静态索引SID基线如TIGER、L
 
 以下诊断追踪了早期静态承诺的三个复合因素（无支持分配、过早承诺、推理时单路径约束），并展示每个DREAM阶段如何解决其针对的特定因素。
 
-![图2: Sports CART侧诊断](translate-DREAM-assets/figure_2.png)
+![图2: Sports CART侧诊断](translate-DREAM-assets/figure_2.webp)
 
 *图2: Sports CART侧诊断。(a) CART先验支持：71.1%在top-8之外，16.9%为低排名top-8，仅12.0%已是top-1支持；(b) 重写局部性：93.5%的重写仅修改1-3个token位置。*
 
@@ -304,7 +304,7 @@ DREAM不追求在暖指标上占主导地位：静态索引SID基线如TIGER、L
 
 **CART提供第一次也是最大的修复**：CART导出每个冷启动物品的top-K候选池（K=8）。继承的静态SID对71.1%的冷物品在top-8池之外，仅12.0%已是top-1支持。CART重写了88.0%的冷top-1 SID，且在被重写的冷启动物品中80.8%从top-8池之外移向池中排名最高的候选。93.5%的重写仅修改1-3个token位置——修复是局部的而非任意的。Sports冷N@10从0.03上升到1.20（43.9x）。
 
-![图3: CART先验-支持修复案例](translate-DREAM-assets/figure_3.png)
+![图3: CART先验-支持修复案例](translate-DREAM-assets/figure_3.webp)
 
 *图3: CART先验-支持修复。三个确定性Sports冷启动物品案例，其静态SID不在CART top-8池中，被修复为top-1支持的候选，仅需1-3个局部token编辑。*
 
@@ -315,7 +315,7 @@ DREAM不追求在暖指标上占主导地位：静态索引SID基线如TIGER、L
 
 **UC3仅在支持决定性时承诺新SID**：在Sports上，89.4%的冷启动物品保持其CART SID。图4a追踪了这种保守行为的两门级联。在18,548个投票汇总物品中：56.8%（10,536）在支持门回退，12.4%（2,301）在边距门回退；仅5,711个物品达到获胜者状态。获胜者状态不意味着SID变化：3,739个获胜者重新确认当前CART SID为最强选项；仅1,972个物品（10.6%）实际切换SID。获胜者物品系统性地具有比回退物品更高的平均置信度。
 
-![图4: UC3保守门控和CPDE多路径恢复](translate-DREAM-assets/figure_4.png)
+![图4: UC3保守门控和CPDE多路径恢复](translate-DREAM-assets/figure_4.webp)
 
 *图4: UC3保守门控和CPDE多路径恢复（Sports）。(a) UC3门控级联：56.8%支持门回退，12.4%边距门回退，仅10.6%实际切换SID；(b) 获胜物品展示系统性更高的平均置信度；(c) 多路径束推理在top-1路径之外挽救307个额外冷启动命中，将冷N@10从0.0156提升到0.0252。*
 

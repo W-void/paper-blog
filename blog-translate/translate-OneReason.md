@@ -15,7 +15,7 @@ OneRec 系列的生成式推荐模型（Generative Recommendation Models）已�
 
 借助上述技术，OneReason 成功实现了在快手多个真实业务基准测试中思考模式优于非思考模式的效果。此外，我们观察到一个有趣的现象：在多个领域中，用 CoT 监督数据替换非 CoT 推荐数据可以提升非思考推理的性能。这表明 CoT 监督的某些收益可能迁移到直接解码中，尽管当前证据是行为层面的，尚不能确定该效果来自压缩、推理还是两者的交互。最后，我们系统性地呈现了一系列推理基准测试和设计洞察，并将开源 OneReason-8B 和 OneReason-0.8B 模型以促进生成式推荐模型的研究。
 
-![Figure 1 | Performance overview: (1) compared with Qwen3-8B, OneReason-8B maintains its general capabilities; (2) OneReason-8B exhibits SOTA performance across real-world recommendation benchmarks; (3) OneReason-8B showing promising "thinking" advantage to recommendation tasks.](translate-OneReason-assets/figure_1.png)
+![Figure 1 | Performance overview: (1) compared with Qwen3-8B, OneReason-8B maintains its general capabilities; (2) OneReason-8B exhibits SOTA performance across real-world recommendation benchmarks; (3) OneReason-8B showing promising "thinking" advantage to recommendation tasks.](translate-OneReason-assets/figure_1.webp)
 
 ---
 
@@ -31,13 +31,13 @@ OneRec 系列的生成式推荐模型（Generative Recommendation Models）已�
 
 为探究这一意外现象的根本原因，我们转向多模态大语言模型（MLLM）文献，其中观察到了惊人相似的推理模式脆弱性。[Sun et al., 2026b] 揭示，当文本和视觉模态对齐不充分时，模型倾向于机械地"阅读"表面视觉文本而非真正推理底层视觉语义，这有力地表明深度跨模态对齐是真正思考的前提条件。延伸这一洞察，[Zhou et al., 2025a] 系统性地调研了 MLLMs 中从感知到认知的路径，并得出结论：没有首先建立模态间稳健的感知对齐，高级交互推理就无法涌现。在此对齐基础上，[Jiang et al., 2025b] 进一步证明，即使模态已对齐，推理鲁棒性仍然脆弱，除非 CoT 轨迹本身经过精心结构化——具体而言，采用逻辑连贯的、从粗到细的推理格式以防止幻觉和过度思考。
 
-![Figure 2 | The pre-training, SFT, RL, and benchmarking pipeline of OneReason.](translate-OneReason-assets/figure_2.png)
+![Figure 2 | The pre-training, SFT, RL, and benchmarking pipeline of OneReason.](translate-OneReason-assets/figure_2.webp)
 
 综合来看，这些工作汇聚于解锁真正推理能力的两个本质且互补的支柱：（i）感知中的模态对齐（Modality Alignment in Perception），它锚定感知并防止模型在空洞的表面信号上运作；（ii）认知中的 CoT 质量（CoT Quality in Cognition），它提供连贯的从粗到细的推理轨迹，并在对齐就位后实现忠实的先思考再回答过程。
 
 对于生成式推荐，如图 3 所示，这些洞察带来了明确的启示：使模型真正思考用户兴趣需要两方面：（1）物品模态与自然语言模态之间的深度感知对齐，使物品标记成为可引用、可组合的语义单元而非不透明的标识符；（2）推荐特定的、
 
-![Figure 3](translate-OneReason-assets/figure_3.png)
+![Figure 3](translate-OneReason-assets/figure_3.webp)
 
 逻辑流畅的认知 CoT 结构，设计用于在此对齐基础上对用户历史和物品属性进行审慎推理。这两个维度作为构建强大推理模型的基石，我们在其中显式地加强文本-物品对齐并设计定制的从粗到细推理格式，使模型真正具备面向推荐的思考能力。
 
@@ -71,7 +71,7 @@ OneReason-Bench 将面向推理的基准测试任务组织为渐进层次结构�
 **统一任务形式化**。所有任务被形式化为序列生成 $Y = F(X)$，其中 $X$ 结合了任务指令 $I$ 和上下文 $C$（如物品模式、用户画像或交互历史）。目标 $Y$ 可以是物品模式、答案选项、自然语言响应或结构化演化链，使 R0-R3 任务共享统一的生成式评估协议。
 
 *Table 1 | Task taxonomy of OneReason-Bench organized across four reasoning layers.*
-![Table 1 | Task taxonomy of OneReason-Bench organized across four reasoning layers.](translate-OneReason-assets/table_1.png)
+![Table 1 | Task taxonomy of OneReason-Bench organized across four reasoning layers.](translate-OneReason-assets/table_1.webp)
 
 #### 3.1.1. R0：感知（Perception）
 
@@ -81,7 +81,7 @@ OneReason-Bench 将面向推理的基准测试任务组织为渐进层次结构�
 - **物品模式锚定（Itemic Pattern Grounding）**：给定自然语言描述，模型将其锚定到对应物品。
 - **物品问答（Item QA）**：给定物品 $i$ 和基于内容的多选选项 $O_a$，模型选择正确选项，评估其能否使用物品语义回答针对性问题。
 
-![Figure 4 | Illustration of the task taxonomy. Each task is specified with its instruction, context, and target format.](translate-OneReason-assets/figure_4.png)
+![Figure 4 | Illustration of the task taxonomy. Each task is specified with its instruction, context, and target format.](translate-OneReason-assets/figure_4.webp)
 
 #### 3.1.2. R1：推导（Derivation）
 
@@ -144,7 +144,7 @@ OneReason-Bench 将面向推理的基准测试任务组织为渐进层次结构�
 
 先前的生成式推荐工作，包括 OneRec-Think 和 OpenOneRec，按任务类型组织预训练数据——物品描述、用户行为序列和画像-文本交错——并混合进行联合训练。虽然这建立了物品模式与自然语言之间的基本映射，
 
-![Figure 5 | Overview of our four-granularity pre-training recommendation corpora, ordered from fine-grained token-level semantics to coarse-grained user behavior modeling.](translate-OneReason-assets/figure_5.png)
+![Figure 5 | Overview of our four-granularity pre-training recommendation corpora, ordered from fine-grained token-level semantics to coarse-grained user behavior modeling.](translate-OneReason-assets/figure_5.webp)
 
 但它留下了三个结构性缺口。首先，物品和用户的语义表达趋于同质化，限制了模型遇到的语言多样性并削弱了表征鲁棒性。其次，数据组织停留在任务层面，没有显式建模物品标记内部的细粒度语义层次或物品间的关系逻辑。第三，用户行为建模依赖于狭窄的条件范式，其中完整用户画像映射到完整行为序列，限制了模型在多样推荐上下文中泛化的能力。
 
@@ -159,7 +159,7 @@ OneReason-Bench 将面向推理的基准测试任务组织为渐进层次结构�
 - **关系粒度（Relational Granularity）**数据通过自然语言解释物品间的连接。它总结关联物品的兴趣转移逻辑，使协同信号能够编码到文本表征和模型参数中。
 - **用户粒度（User Granularity）**数据通过使模型在统一的个性化用户上下文下理解和生成多模态内容来完成彻底的跨模态融合。
 
-![Figure 6 | Illustration of token-granularity pre-training data.](translate-OneReason-assets/figure_6.png)
+![Figure 6 | Illustration of token-granularity pre-training data.](translate-OneReason-assets/figure_6.webp)
 
 关于四粒度数据的详细构建方法、消融实验和训练方案，请参见原文第 4.2-4.4 节及附录 C。
 
@@ -188,7 +188,7 @@ R2 数据训练模型将用户兴趣作为时间过程进行推理。包括演�
 推荐推理轨迹（CoT）的构建遵循三阶段压缩-推理协议：人格抽象（Persona Abstraction）、兴趣扩展（Interest Expansion）和转移推断（Transition Inference）。
 
 **人格抽象（Persona Abstraction）**。人格抽象的目标是将稀疏且嘈杂的行为证据压缩为紧凑、可解释的先验。给定用户画像和交互历史，教师模型识别最可能的用户原型，或在用户不符合任何预定义类别时总结定制化画像。该抽象是一个软的、类型化的用户状态而非确定性标签：它缩小了可能的兴趣方向集合，但最终推断仍必须基于观察到的行为。此阶段通过将高维行为日志转换为少量偏好因子（如家庭消费需求、游戏技能提升、直播购物敏感度、食物偏好、健身目标或共享设备模糊性）来减少转移判断的搜索空间。表 7 给出了代表性的中文人格抽象案例及英文分析。
-![Table 7 | Representative persona abstraction cases with English analysis.](translate-OneReason-assets/table_7.png)
+![Table 7 | Representative persona abstraction cases with English analysis.](translate-OneReason-assets/table_7.webp)
 
 **兴趣扩展（Interest Expansion）**。在人格抽象之后，模型执行兴趣扩展，使轨迹不会过早地锁定单一解释。此阶段从兴趣演化类型压缩开始：它从近期轨迹证据中识别类型化的模式（Motif），如搜索触发的需求、从宽泛类别到具体参数的细化、从内容到产品的场景延续、或直播/商品/广告/视频行为之间的跨领域回响。然后将这些模式展开为一小组候选下一兴趣假设。这样，兴趣扩展既足够宽泛以表示推荐不确定性，又足够紧凑以防止轨迹被原始行为标记淹没。
 
@@ -206,7 +206,7 @@ R2 数据训练模型将用户兴趣作为时间过程进行推理。包括演�
 
 图 9 总结了这五个维度的得分分布和均值画像。安全性得分最高（4.94），表明轨迹很少泄漏目标信息；事实性（4.09）次之；一致性（3.66）、信息性（3.53）和逻辑性（3.51）相对较低但仍在可接受范围。
 
-![Figure 9 | Score distribution and mean-score profile for reasoning-trace quality across safety, consistency, logic, factuality, and informativeness dimensions.](translate-OneReason-assets/figure_9.png)
+![Figure 9 | Score distribution and mean-score profile for reasoning-trace quality across safety, consistency, logic, factuality, and informativeness dimensions.](translate-OneReason-assets/figure_9.webp)
 
 ### 5.5. 物品指令数据（Itemic Instruction Data）
 
@@ -230,7 +230,7 @@ SFT 阶段之后，模型已获得通用语义理解、指令遵循能力和初�
 
 然而，对于支持跨领域多样任务的基础推荐模型，直接在混合领域数据上应用 RL 可能导致跨领域干扰，因为不同领域通常涉及不同的用户意图、物品语义和奖励景观。为缓解此问题，我们采用"先专精后统一"策略。如图 10 所示，我们首先通过 RL 在每个推荐领域分别优化模型，得到四个专精于领域特定推荐推理的教师模型。然后我们研究两种方法将这些领域特定能力整合为一个统一模型：拒绝采样微调（RFT）和多教师在线策略蒸馏（MOPD）。
 
-![Figure 10 | Overview of the "specialize-then-unify" pipeline.](translate-OneReason-assets/figure_10.png)
+![Figure 10 | Overview of the "specialize-then-unify" pipeline.](translate-OneReason-assets/figure_10.webp)
 
 ### 6.1. 面向推荐的强化学习（Recommendation-oriented RL）
 
@@ -246,7 +246,7 @@ $$\hat{A}_{u,i} = \frac{R_{u,i} - \text{mean}\{R_{u,k}\}_{k=1}^G}{\text{std}\{R_
 
 为解决此问题，我们设计了针对推荐导向 RL 的两阶段 rollout 策略。如图 11 所示，核心思想是将推理成本分摊到多次推荐上。对于每个用户 $u$，我们首先采样 $N$ 条推理轨迹 $\{\text{CoT}_{u,i}\}_{i=1}^N$。以每条推理轨迹为条件，模型并行生成 $K$ 个物品标记序列 $\{\mathbf{c}_{u,i,j}\}_{j=1}^K$。这产生 $N \times K$ 个有效推荐 rollout，同时仅生成 $N$ 条推理轨迹。由于额外扩展仅限于短物品标记，奖励覆盖率在有限的额外计算和内存开销下显著提升。
 
-![Figure 11 | Overview of recommendation-oriented GRPO.](translate-OneReason-assets/figure_11.png)
+![Figure 11 | Overview of recommendation-oriented GRPO.](translate-OneReason-assets/figure_11.webp)
 
 **奖励设计**。推荐任务聚焦于集合级优化，模型应检索一组相关物品而非仅优化单一预测。由于用户兴趣通常是多面的，理想的推理轨迹应覆盖满足用户兴趣的多样相关物品。因此，给定两阶段解码过程产生的 $N \times K$ 个 rollout，我们为每个 rollout 分配混合奖励，同时考虑物品级准确性和每条推理轨迹引发的推荐多样性：
 
@@ -258,19 +258,19 @@ $$R_{u,i,j} = R_{\text{rule}}(\mathbf{c}_{u,i,j}) \cdot R_{\text{div}}(\text{CoT
 
 **消融研究**。图 13 展示了两阶段 rollout 设计的消融结果：两阶段 rollout 通过复用每条生成的推理轨迹跨多个物品标记序列，大幅减少了每步训练时间，同时性能结果显示一致的增益。图 14 展示了多样性奖励的消融：鼓励同一推理轨迹下后续物品标记序列的多样性有助于模型检索更广泛的潜在物品集合，在较大 $K$ 值时改进更为显著。图 15-16 分别展示了阶段式裁剪（Stage-wise Clipping）和负样本降权的消融，两种设计都有助于更稳定的训练和更好的性能。
 
-![Figure 13 | Ablation study on rollout optimization. Two-stage rollout improves training efficiency while achieving stronger recommendation performance.](translate-OneReason-assets/figure_13.png)
+![Figure 13 | Ablation study on rollout optimization. Two-stage rollout improves training efficiency while achieving stronger recommendation performance.](translate-OneReason-assets/figure_13.webp)
 
-![Figure 14 | Ablation study on diversity reward.](translate-OneReason-assets/figure_14.png)
+![Figure 14 | Ablation study on diversity reward.](translate-OneReason-assets/figure_14.webp)
 
-![Figure 15 | Ablation study on stage-wise clipping.](translate-OneReason-assets/figure_15.png)
+![Figure 15 | Ablation study on stage-wise clipping.](translate-OneReason-assets/figure_15.webp)
 
-![Figure 16 | Ablation study on negative sample down-weighting.](translate-OneReason-assets/figure_16.png)
+![Figure 16 | Ablation study on negative sample down-weighting.](translate-OneReason-assets/figure_16.webp)
 
 ### 6.2. 拒绝采样微调（Rejection Fine-Tuning, RFT）
 
 RFT 通过在领域专精教师模型采样的经验证高质量推理轨迹上微调模型来整合领域特定能力。图 17 展示了 RFT 相对于混合领域 RL（Mix-RL）在 Recall@K 上的相对增益。RFT 在 Recall@1 上并不总是改进，特别是在 Cross-Product 和 Cross-Live 上，但随着 $K$ 增大，RFT 在各领域一致展现更强优势。这一趋势表明 RFT 更少聚焦于锐化单一顶部预测，而更有效地改善候选覆盖率——这更符合推荐的目标。
 
-![Figure 17 | Relative Recall@K gains of RFT over Mix-RL across four recommendation domains.](translate-OneReason-assets/figure_17.png)
+![Figure 17 | Relative Recall@K gains of RFT over Mix-RL across four recommendation domains.](translate-OneReason-assets/figure_17.webp)
 
 ### 6.3. 多教师在线策略蒸馏（Multi-Teacher On-Policy Distillation, MOPD）
 
@@ -280,7 +280,7 @@ RFT 通过在领域专精教师模型采样的经验证高质量推理轨迹上�
 
 $$\hat{A}_{\text{MOPD},t} = \text{sg}\left[\log \pi_{\text{domain}_i}(y_t | x, y_{<t}) - \log \pi_\theta(y_t | x, y_{<t})\right]$$
 
-![Figure 18 | Overview of the information-gain-aware trajectory filtering mechanism.](translate-OneReason-assets/figure_18.png)
+![Figure 18 | Overview of the information-gain-aware trajectory filtering mechanism.](translate-OneReason-assets/figure_18.webp)
 
 **优化：信息增益感知的轨迹过滤**。生成式推荐固有地面临巨大物品候选空间和高度稀疏的用户兴趣信号。在在线策略训练中，这转化为轨迹 rollout 期间极低的命中率。当将 MOPD 应用于此类环境时，统一对待所有采样 rollout 会导致严重的梯度稀释问题。为解决此问题，我们采用信息增益感知的轨迹过滤机制。我们利用标记级优势差距作为信息增益的无标签指标，动态丢弃低信息轨迹，迫使学生聚焦于最不相似和最具信息量的 rollout。
 
@@ -288,22 +288,22 @@ $$\hat{A}_{\text{MOPD},t} = \text{sg}\left[\log \pi_{\text{domain}_i}(y_t | x, y
 
 **性能分析**。如图 19(a) 所示，所提出的训练范式在所有评估领域产生严格正向的性能增益。值得注意的是，相对改进随 $K$ 增大而扩展。图 19(b) 显示学生在 $K \leq 16$ 时与教师完美对齐或超越教师，但在 $K > 16$ 时仍存在差距——这是反向 KL 目标的基本理论限制。
 
-![Figure 19 | Relative Recall@K changes of MOPD across four domains.](translate-OneReason-assets/figure_19.png)
+![Figure 19 | Relative Recall@K changes of MOPD across four domains.](translate-OneReason-assets/figure_19.webp)
 
 **消融研究**。图 20 展示了信息增益过滤对 MOPD 性能的影响：IG 过滤在大多数领域和评估设置中带来一致增益，特别是在较大 $K$ 值时。图 21 展示了策略梯度损失：无过滤的 MOPD 表现出更大方差和陡峭的初始下降，而有过滤的 MOPD 显著抑制梯度噪声，实现更平滑稳定的收敛。图 22 展示了不同学生选择的影响：所有三种学生（SFT、SFT→RFT、SFT→Mix-RL）都能从 MOPD 训练中受益，表明教师的上限限制了 MOPD 改进的程度。
 
-![Figure 20 | Effect of the information-gain-aware (IG) filter on MOPD performance across recommendation domains.](translate-OneReason-assets/figure_20.png)
+![Figure 20 | Effect of the information-gain-aware (IG) filter on MOPD performance across recommendation domains.](translate-OneReason-assets/figure_20.webp)
 
-![Figure 21 | Policy-gradient loss during MOPD training with and without IG filtering.](translate-OneReason-assets/figure_21.png)
+![Figure 21 | Policy-gradient loss during MOPD training with and without IG filtering.](translate-OneReason-assets/figure_21.webp)
 
-![Figure 22 | Comparison of different student models before and after MOPD training.](translate-OneReason-assets/figure_22.png)
+![Figure 22 | Comparison of different student models before and after MOPD training.](translate-OneReason-assets/figure_22.webp)
 
 ### 6.4. 比较与讨论
 
 本节比较五种优化策略的推荐准确性：SFT 检查点、混合领域 RL、领域特定 RL、RFT 和 MOPD。评估在跨领域推荐设置下进行。
 
 如表 9 所示，所有后 SFT 优化方法在所有领域和指标上都大幅超越 SFT 基线，表明从自我探索中学习可以进一步增强超越监督模仿的推荐性能。然而，直接在 RL 期间混合所有领域并不一致地达到最佳性能。与领域特定 RL 相比，混合领域 RL 通常产生较弱的性能，表明异质领域可能引入冲突的优化信号。
-![Table 9 | Comparison of optimization strategies (SFT, Mix-RL, Domain-RL, RFT, MOPD) across four recommendation domains.](translate-OneReason-assets/table_9.png)
+![Table 9 | Comparison of optimization strategies (SFT, Mix-RL, Domain-RL, RFT, MOPD) across four recommendation domains.](translate-OneReason-assets/table_9.webp)
 
 两种知识整合方法提供互补收益：RFT 实现强大且稳定的增益，特别是在 Cross-Video 上；MOPD 表现有竞争力并在若干设置中获得最佳结果。总体而言，这些结果支持"先专精后统一"策略的有效性。
 
@@ -324,14 +324,14 @@ $$\hat{A}_{\text{MOPD},t} = \text{sg}\left[\log \pi_{\text{domain}_i}(y_t | x, y
 
 如图 23 所示，SFT 模型在所有领域一致产生负 $\Delta LL$ 值，表明其生成的 CoT 倾向于分散模型对真实目标预测的注意力。相比之下，RFT 模型在所有四个领域实现正 $\Delta LL$ 值，证明 RFT 阶段显著提升了生成 CoT 对真实目标预测的正向贡献能力。
 
-![Figure 23 | Log-likelihood improvement (ΔLL) comparison between SFT and RFT models across four domains.](translate-OneReason-assets/figure_23.png)
+![Figure 23 | Log-likelihood improvement (ΔLL) comparison between SFT and RFT models across four domains.](translate-OneReason-assets/figure_23.webp)
 
 **标准 2：沿 CoT 的对数似然递进**。高质量推理轨迹应随推理过程展开逐步增强模型对真实目标的置信度。如图 24 所示，在思考模式设置下，逐步纳入分段 CoT 前缀一致地改善了两个模型的真实目标条件对数似然。RFT 模型展现出更早的饱和行为，仅在几个推理段后即达到接近最优的似然，这表明并非所有生成的推理标记对预测贡献相同，大部分预测增益可通过缩短的 CoT 实现。
 
-![Figure 24 | Progressive log-likelihood improvement along CoT segments for SFT and RFT models.](translate-OneReason-assets/figure_24.png)
+![Figure 24 | Progressive log-likelihood improvement along CoT segments for SFT and RFT models.](translate-OneReason-assets/figure_24.webp)
 
 **标准 3：物品合法性**。CoT 中引用的每个物品模式都应对应物品语料库中的有效标识符。如表 11 所示，$\gamma_{\text{legal}}$ 在 SFT 和 RFT 的所有四个领域均已饱和至 1.00。
-![Table 11 | Item legality and history grounding metrics across domains.](translate-OneReason-assets/table_11.png)
+![Table 11 | Item legality and history grounding metrics across domains.](translate-OneReason-assets/table_11.webp)
 
 **标准 4：历史基础性**。在合法物品模式中，我们进一步检查它们是否出现在用户的交互历史中。在 Cross-Video 和 Cross-Ad 上，RFT 相比 SFT 收紧了 $\gamma_{\text{hist|legal}}$（分别 +2.50 pt 和 +4.27 pt）。在 Cross-Live 和 Cross-Product 上，RFT 则表现出适度下降，这与表 9 中 RFT 在这两个领域相对 Mix-RL 的增益较小一致。
 
@@ -358,24 +358,24 @@ SFT 轨迹停留在表面 IP 层面（和平精英→更多和平精英），每
 - 冷启动敏感性：传统 ID 基模型在跨领域评估中挣扎，因为 33.69% 的目标物品 ID 在训练中未见过；相比之下，仅 11.55% 的目标物品模式未见过。
 - 文本基 LLM 推荐的局限：更先进的通用 LLM 不一定产生更好的推荐，表明推荐能力与通用智能或模型规模不可靠相关。其欠佳表现源于协同信号的缺失和基于 ANN 的描述到物品检索引入的误差。
 - OneReason 预训练的效果：LC-Rec 结果表明我们的 OneReason 预训练检查点为物品标记推荐提供了强大的语义基础。
-![Table 14 | Cross-domain recommendation performance comparison across ID-based, text-based, and itemic-token-based methods.](translate-OneReason-assets/table_14.png)
+![Table 14 | Cross-domain recommendation performance comparison across ID-based, text-based, and itemic-token-based methods.](translate-OneReason-assets/table_14.webp)
 
 **非推荐性能**。表 15 在 OneReason-Bench 上评估 R0-R2 能力。两个发现突出：RFT 思考模式有助于更高级推理（在 R1-R2 上改善平均性能）；OneReason 使紧凑物品标记具有竞争力（即使在输入信息劣势下，OneReason 在 R2 套件的部分任务上超越若干更大的先进 LLM）。
-![Table 15 | Non-recommendation (R0-R2) performance evaluation on OneReason-Bench.](translate-OneReason-assets/table_15.png)
+![Table 15 | Non-recommendation (R0-R2) performance evaluation on OneReason-Bench.](translate-OneReason-assets/table_15.webp)
 
 **通用智能健全性检查**。表 16 显示，在思考模式下，OneReason 在四个代表性基准测试（MMLU-Pro、GPQA-Diamond、MATH-500、GSM8K）上保持了其 Qwen3-8B 骨干的通用推理和指令遵循能力，提供了推荐导向训练不会灾难性降低通用能力的初步证据。相比之下，LC-Rec 变体在所有基准测试上遭受实质性退化。
-![Table 16 | General intelligence sanity check on MMLU-Pro, GPQA-Diamond, MATH-500, GSM8K.](translate-OneReason-assets/table_16.png)
+![Table 16 | General intelligence sanity check on MMLU-Pro, GPQA-Diamond, MATH-500, GSM8K.](translate-OneReason-assets/table_16.webp)
 
 ### 8.2. 思考监督对非思考模式的增益
 
 虽然第 5.4.1 节的推荐 CoT 数据旨在提供紧凑、证据基础的推荐推理而非直接优化非思考解码，我们观察到一个重要的下游现象：思考监督可以改善直接推荐，即使在推理时显式推理轨迹被抑制。
 
 我们首先进行控制的 token 对齐实验。比较两种设置：(i) 在 100K unCoT 样本上继续 SFT；(ii) 在 40K CoT 样本和 50K unCoT 样本的混合上继续 SFT。两种设置对齐到相同的 0.25B token 训练预算。表 17 显示，在相同 token 预算下，用 CoT 数据替换部分 unCoT 数据在 Cross-Video、Cross-Product 和 Cross-Live 上改善了非思考性能。
-![Table 17 | Token-aligned comparison: CoT vs. unCoT SFT under the same 0.25B token budget.](translate-OneReason-assets/table_17.png)
+![Table 17 | Token-aligned comparison: CoT vs. unCoT SFT under the same 0.25B token budget.](translate-OneReason-assets/table_17.webp)
 
 我们进一步进行样本数控制的混合比例扫描。在固定 100K 推荐样本预算下，变化 CoT 和 unCoT 样本的比例。图 25 显示响应曲线并非简单单调，大多数领域展现清晰的中间最优点。Cross-Video 在平衡混合附近达到最佳结果，Cross-Product 偏好更 CoT 重的混合，Cross-Ad 则曲线更平坦且最佳点更靠近 unCoT 侧。
 
-![Figure 25 | Non-thinking recommendation gains across different CoT/unCoT mixture ratios.](translate-OneReason-assets/figure_25.png)
+![Figure 25 | Non-thinking recommendation gains across different CoT/unCoT mixture ratios.](translate-OneReason-assets/figure_25.webp)
 
 我们将此现象解释为两种监督之间的平衡。unCoT 数据匹配非思考推理格式并直接教模型将用户上下文映射到目标物品标记。CoT 数据提供额外训练信号，包含两个组分：压缩信号（教模型从长行为历史形成紧凑用户兴趣状态）和推理信号（教模型从压缩状态和支持证据连接到目标领域决策）。一个合理假设是，从 CoT 监督中学到的部分紧凑用户状态构建和证据选择偏差仍反映在模型参数中。然而，更多 CoT 数据并非总是更好——CoT 轨迹比 unCoT 答案更长，过多 CoT 训练可能削弱最终目标监督的密度。最佳混合在 CoT 推理信号和 unCoT 直接目标信号适当平衡时获得。
 
@@ -395,7 +395,7 @@ SFT 轨迹停留在表面 IP 层面（和平精英→更多和平精英），每
 
 由于 LLM 的规模和推理系统的限制，直接部署 OneReason 进行实时推荐仍面临显著的延迟和计算成本挑战。我们提出了 OneReason 的新在线架构——"快慢思考"（Fast-Slow Thinking）架构，并进一步引入在线增量训练策略以确保模型性能。
 
-![Figure 26 | The online deployment architecture of OneReason.](translate-OneReason-assets/figure_26.png)
+![Figure 26 | The online deployment architecture of OneReason.](translate-OneReason-assets/figure_26.webp)
 
 **"快慢思考"架构**。该架构避免完全依赖实时推理，而是引入快（在线）和慢（近线）协作机制，持续将 OneReason 的知识和推理能力注入系统，同时保持低延迟和稳定增益。工作流程包括：
 
@@ -414,7 +414,7 @@ SFT 轨迹停留在表面 IP 层面（和平精英→更多和平精英），每
 ### 9.3. 在线实验
 
 我们进行了为期 10 天的在线 A/B 实验，在快手 App 本地生活场景的子部分部署 OneReason，使用 5% 流量分配。如表 18 所示，直接使用 OneReason 进行检索和使用其增强实时 OneRec 都在在线 A/B 实验中产生显著改进。组合两种范式实现最佳结果：Impressions +10.332%，Revenue +8.234%，对应快手平台数亿元人民币的年化商业收入。此外，OneReason 实现了 ROI > 5。
-![Table 18 | Online A/B experiment results on Kuaishou local-life ads scenario.](translate-OneReason-assets/table_18.png)
+![Table 18 | Online A/B experiment results on Kuaishou local-life ads scenario.](translate-OneReason-assets/table_18.webp)
 
 ---
 
@@ -450,40 +450,40 @@ SFT 轨迹停留在表面 IP 层面（和平精英→更多和平精英），每
 
 以下表格来自论文附录部分，包含详细的数据统计、实验结果和补充材料。
 
-![Table 2](translate-OneReason-assets/table_2.png)
+![Table 2](translate-OneReason-assets/table_2.webp)
 
-![Table 3](translate-OneReason-assets/table_3.png)
+![Table 3](translate-OneReason-assets/table_3.webp)
 
-![Table 4](translate-OneReason-assets/table_4.png)
+![Table 4](translate-OneReason-assets/table_4.webp)
 
-![Table 5](translate-OneReason-assets/table_5.png)
+![Table 5](translate-OneReason-assets/table_5.webp)
 
-![Table 6](translate-OneReason-assets/table_6.png)
+![Table 6](translate-OneReason-assets/table_6.webp)
 
-![Table 8](translate-OneReason-assets/table_8.png)
+![Table 8](translate-OneReason-assets/table_8.webp)
 
-![Table 10](translate-OneReason-assets/table_10.png)
+![Table 10](translate-OneReason-assets/table_10.webp)
 
-![Table 12](translate-OneReason-assets/table_12.png)
+![Table 12](translate-OneReason-assets/table_12.webp)
 
-![Table 13](translate-OneReason-assets/table_13.png)
+![Table 13](translate-OneReason-assets/table_13.webp)
 
-![Table 19](translate-OneReason-assets/table_19.png)
+![Table 19](translate-OneReason-assets/table_19.webp)
 
-![Table 20](translate-OneReason-assets/table_20.png)
+![Table 20](translate-OneReason-assets/table_20.webp)
 
-![Table 21](translate-OneReason-assets/table_21.png)
+![Table 21](translate-OneReason-assets/table_21.webp)
 
-![Table 22](translate-OneReason-assets/table_22.png)
+![Table 22](translate-OneReason-assets/table_22.webp)
 
-![Table 23](translate-OneReason-assets/table_23.png)
+![Table 23](translate-OneReason-assets/table_23.webp)
 
-![Table 24](translate-OneReason-assets/table_24.png)
+![Table 24](translate-OneReason-assets/table_24.webp)
 
-![Table 25](translate-OneReason-assets/table_25.png)
+![Table 25](translate-OneReason-assets/table_25.webp)
 
-![Table 26](translate-OneReason-assets/table_26.png)
+![Table 26](translate-OneReason-assets/table_26.webp)
 
-![Table 27](translate-OneReason-assets/table_27.png)
+![Table 27](translate-OneReason-assets/table_27.webp)
 
-![Table 28](translate-OneReason-assets/table_28.png)
+![Table 28](translate-OneReason-assets/table_28.webp)

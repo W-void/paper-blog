@@ -6,7 +6,7 @@ tags: [公众号]
 
 [You Only evaLuate Once: A Tree-based Rerank Method at Meituan](https://arxiv.org/pdf/2508.14420)
 
-![](../static/img/wechat/8ec80c81-0420-413d-bac7-ca1201873f84-2fe6f7.png)
+![](../static/img/wechat/8ec80c81-0420-413d-bac7-ca1201873f84-2fe6f7.webp)
 
 你只用评估一次——you only evaluate once。重排需要在组合空间中进行检索，但要想评估所有列表就无法将模型做得很复杂很精确，所以现在的方法基本都是评估两次，先GSU粗略评估缩小范围，再ESU精确评估选择最优。GSU追求效率，ESU追求效果，效果与效率貌似是一对不可调和的矛盾。但这篇文章-YOLOR转移了这一矛盾，将效果与效率重新定义为：“在列表上追求效果”和“在排列空间内追求效率”，具体方法就是树状上下文和cache复用。挺有意思的idea，值得一读。
 
@@ -18,7 +18,7 @@ tags: [公众号]
 
 本文的方法也很简单，两阶段有不一致问题，那就只评估一次（You Only Evaluate Once）。但排列空间的计算复杂度怎么解决？答案就是cache。以下图为例，下图是8个候选的某一个排列，作者将上下文设计为多层的树状上下文，实现“在列表上追求效果”。如果要计算第4个item的预估值，那么可以收集它的3层上下文后进行计算。从图中可以看出，第4个item的上下文和第5个item是重复的，因此可以复用。同理在排列空间中任何一个排列，只要第4个item和第5个item是相邻的，那么他们的上下文 $E(4,5)$ 都是可以复用的，因此实现“在排列空间内追求效率”。
 
-![](../static/img/wechat/ec1c7766-d1b6-43d1-b7cc-1896a2e58c16-bcff9a.png)
+![](../static/img/wechat/ec1c7766-d1b6-43d1-b7cc-1896a2e58c16-bcff9a.webp)
 
 
 # 2 方法
@@ -27,7 +27,7 @@ tags: [公众号]
 1. point-wise语义建模$X^s$; 
 2. 层级上下文建模$X^C$; 
 3. 绝对位置建模$E^p$.
-![](../static/img/wechat/71b7f67a-30b6-4d70-88ed-8dd2dc38e1d7-1b5a53.png)
+![](../static/img/wechat/71b7f67a-30b6-4d70-88ed-8dd2dc38e1d7-1b5a53.webp)
 
 **point-wise语义建模**$X^s$：可以直接复用精排模型（甚至可以直接让精排模型输出最后一层emb，还能增加链路一致性）。
 
@@ -35,7 +35,7 @@ tags: [公众号]
 
 重点是**层级上下文建模**$X^C$：作者在论文中说的很简单，先计算出所有层级上下文$X^C$，再选择出当前列表L所需要的上下文$X^C_\mathcal{L}$.
 
-![](../static/img/wechat/f1525999-6082-4355-ae4a-5eb659f7dcaf-7ee0ef.png)
+![](../static/img/wechat/f1525999-6082-4355-ae4a-5eb659f7dcaf-7ee0ef.webp)
 
 这个代码实现还是有一定复杂度的，我在这里给出一个代码demo，一共有5步：
 
@@ -50,7 +50,7 @@ all_perms = np.array(list(itertools.permutations(list(range(len_pv))))) # [P, le
 print(all_perms.shape)
 print(all_perms)
 ```
-![](../static/img/wechat/135cad71-c0c6-4ae4-9a15-c869a9c49073-06d9eb.png)
+![](../static/img/wechat/135cad71-c0c6-4ae4-9a15-c869a9c49073-06d9eb.webp)
 
 2. 以上下文尺度=3为例，一共有448个上下文。
 ```python
@@ -64,7 +64,7 @@ context_unique = np.array([x.split(',') for x in context_str_unique]).astype(int
 print(context_unique.shape)
 print(context_unique)
 ```
-![](../static/img/wechat/d24baa87-8237-4d44-aaee-a0cecb3e79b1-f216a7.png)
+![](../static/img/wechat/d24baa87-8237-4d44-aaee-a0cecb3e79b1-f216a7.webp)
 
 3. 构建列表-上下文的映射关系。
 
@@ -76,7 +76,7 @@ context_id = np.reshape(context_str2id, [-1, len_pv]) # [P, len_pv]
 print(context_id.shape)
 print(context_id)
 ```
-![](../static/img/wechat/5cc75d59-2192-4338-90e3-ea11b164c86b-ca5057.png)
+![](../static/img/wechat/5cc75d59-2192-4338-90e3-ea11b164c86b-ca5057.webp)
 
 4. 设batch_size=10，批量计算候选排列空间内的上下文。
 
@@ -93,24 +93,24 @@ CCM = tf.keras.layers.Dense(emb_dim, activation=tf.nn.leaky_relu)(CCM_pre) # [B,
 
 print(CCM.shape) # [B, C, emb]
 ```
-![](../static/img/wechat/74285e2d-f2ae-4992-936d-cd89bc39521e-b0f3d1.png)
+![](../static/img/wechat/74285e2d-f2ae-4992-936d-cd89bc39521e-b0f3d1.webp)
 
 5. 最后，gather得到排列空间内每个可能排列所需要的上下文。
 ```python
 perms_X_C = tf.gather(CCM, array_id, axis=1) # [B, P, len_pv, emb]
 print(perms_X_C.shape) # [B, P, len_pv, emb]
 ```
-![](../static/img/wechat/69f4ab75-0e4c-4dd4-9f50-aed00d0446f1-f99c4b.png)
+![](../static/img/wechat/69f4ab75-0e4c-4dd4-9f50-aed00d0446f1-f99c4b.webp)
 
 
 # 3 实验
 
 离线auc：
-![](../static/img/wechat/d01bb003-77c9-4a54-a194-59982aa94fbc-6bc48a.png)
+![](../static/img/wechat/d01bb003-77c9-4a54-a194-59982aa94fbc-6bc48a.webp)
 
 重点是HR这个指标。美团数据集是$A_8^8$=40320个排列，因为YOLOR很快，所以可以全预估选最优，因此HR达到了1.
-![](../static/img/wechat/4ed437ad-85d0-4ec0-81ac-9f9b7135ee7d-91dcd2.png)
+![](../static/img/wechat/4ed437ad-85d0-4ec0-81ac-9f9b7135ee7d-91dcd2.webp)
 
 
 AB实验：
-![](../static/img/wechat/633a59bc-80a0-4b7c-9d65-178e46f9ca92-6a8f37.png)
+![](../static/img/wechat/633a59bc-80a0-4b7c-9d65-178e46f9ca92-6a8f37.webp)

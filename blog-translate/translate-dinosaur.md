@@ -129,15 +129,15 @@ $$\mathcal{X}_S = \bigcup_{i \in \mathcal{I}} \left\{ \left(\mathbf{v}_i^{(j)}, 
 
 为了回答 RQ1 和 RQ2，我们检查不同采样限制 $S$ 下全局目录覆盖率和召回率之间的关系。如表 1 所示，DINOSAUR 深刻地扩展了目录足迹。对于 $K = 1000$，将采样预算从基线（$S = 1$）增加到 $S = 5$ 将全局覆盖率从 23.52% 提升到 62.97%。至关重要的是，这种探索表面积的近三倍扩展几乎不以点估计效用为代价，离线召回仅减少 0.0041。
 
-![Table 1: Global Recall@K and Catalogue Coverage@K (%) across retrieval methods. Higher is better.](translate-dinosaur-assets/table_1.png)
+![Table 1: Global Recall@K and Catalogue Coverage@K (%) across retrieval methods. Higher is better.](translate-dinosaur-assets/table_1.webp)
 
 当检查表 2 中的分层结果时，这种动态变得更加明显。基线近似搜索完全忽略最不流行的物品，在桶 B4 中实现 0.00% 覆盖率。相比之下，DINOSAUR 成功检索到这些高度冷门物品的 81.88% 以上，确保超过 13% 的用户有机地接收到来自长尾最极端端点的推荐。
 
-![Table 2: Stratified Catalogue Coverage and Inclusion Rate at K=1000 by popularity quintile. Higher is better.](translate-dinosaur-assets/table_2.png)
+![Table 2: Stratified Catalogue Coverage and Inclusion Rate at K=1000 by popularity quintile. Higher is better.](translate-dinosaur-assets/table_2.webp)
 
 最后，我们通过将 DINOSAUR 与强 $\epsilon$-greedy 启发式方法进行比较来验证这种权衡的效率。如图 1 所示，DINOSAUR 严格帕累托支配均匀随机探索。在任何给定的修改候选列表比例下，以及在多个实际检索深度（$K \in \{100, 500, 1000\}$）下，通过合成后验的汤普森采样始终在注入相关多样性的同时保持更高的顶级召回。
 
-![Figure 1: Pareto Frontier of Recall vs. Exploration at varying retrieval depths. DINOSAUR strictly dominates the epsilon-greedy baseline, yielding substantially higher recall for an equivalent fraction of exploratory recommendations.](translate-dinosaur-assets/figure_1.png)
+![Figure 1: Pareto Frontier of Recall vs. Exploration at varying retrieval depths. DINOSAUR strictly dominates the epsilon-greedy baseline, yielding substantially higher recall for an equivalent fraction of exploratory recommendations.](translate-dinosaur-assets/figure_1.webp)
 
 ---
 

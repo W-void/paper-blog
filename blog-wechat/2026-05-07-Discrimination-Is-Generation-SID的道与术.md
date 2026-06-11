@@ -5,7 +5,7 @@ tags: [公众号]
 ---
 
 
-![](../static/img/wechat/fd15517c-090a-4df5-86c9-3ce1397d058e-133ba6.jpg)
+![](../static/img/wechat/fd15517c-090a-4df5-86c9-3ce1397d058e-133ba6.webp)
 
 
 目前，论文方法层出不穷，思路 idea 千头万绪，推荐系统蒸蒸日上！给人的感觉就一个字：烦躁！不禁每日三省吾身：

@@ -5,7 +5,7 @@ tags: [公众号]
 ---
 
 
-![](../static/img/wechat/48183711-917e-468d-a2e2-8b80d0519db0-128282.png)
+![](../static/img/wechat/48183711-917e-468d-a2e2-8b80d0519db0-128282.webp)
 
 DualGR: Generative Retrieval with Long and Short-Term Interests Modeling
 https://arxiv.org/pdf/2511.12518
@@ -28,47 +28,47 @@ decoder是GR的核心，是真正的生成模块。判别模型可以将target�
 # 2 方法
 
 包括三个部分：长短期双流、基于sim的生成、和曝光感知的NTPloss。
-![](../static/img/wechat/b61143fc-169b-465f-a0ac-03f78bc340e1-454acf.png)
+![](../static/img/wechat/b61143fc-169b-465f-a0ac-03f78bc340e1-454acf.webp)
 
 ## 2.1 长短期双流
 
 只对长短期序列的第一层sid: $s^{(1)}$进行计算：
-![](../static/img/wechat/d429851b-e6d6-46a0-ab7d-484f4ee23a54-8131d2.png)
+![](../static/img/wechat/d429851b-e6d6-46a0-ab7d-484f4ee23a54-8131d2.webp)
 
 训练时用ground-truth的第一层sid：$\mathbf{e}_{\star}^{(1)}$，对长短期序列的第一层sid进行相似度计算，从历史行为中检索出最相近的top-K$\mathcal{H}_{t}^{\star}$：
 
-![](../static/img/wechat/a85c9dd2-133b-4cb6-b448-ae84c124328a-486eb3.png)
+![](../static/img/wechat/a85c9dd2-133b-4cb6-b448-ae84c124328a-486eb3.webp)
 
 将检索出的top-K $\mathcal{H}_{t}^{\star}$ 作为输入的一部分：
-![](../static/img/wechat/3c34c24b-aa7d-4a07-81aa-adf1c07c2e0d-2c53c8.png)
+![](../static/img/wechat/3c34c24b-aa7d-4a07-81aa-adf1c07c2e0d-2c53c8.webp)
 
 推理时没有ground-truth只能全量参与：
-![](../static/img/wechat/e671e75a-f2a7-40bc-964c-08ea17315717-a61d6d.png)
+![](../static/img/wechat/e671e75a-f2a7-40bc-964c-08ea17315717-a61d6d.webp)
 
 相当于训练时只用检索出来的部分序列，推理时用全部序列。
 
-![](../static/img/wechat/e90590b2-30fd-4711-ba62-77d3c14c17d6-c8afe4.png)
+![](../static/img/wechat/e90590b2-30fd-4711-ba62-77d3c14c17d6-c8afe4.webp)
 
-![](../static/img/wechat/63c04986-deac-477f-8f48-125c378d1b18-41e9bf.png)
+![](../static/img/wechat/63c04986-deac-477f-8f48-125c378d1b18-41e9bf.webp)
 
 
 ## 2.2 基于sim的生成
 
-![](../static/img/wechat/483b4e09-2c1e-43c6-acee-462c59a2ff02-10bdee.png)
+![](../static/img/wechat/483b4e09-2c1e-43c6-acee-462c59a2ff02-10bdee.webp)
 
 训练时只检索和ground-truth第一层sid相关的行为：
-![](../static/img/wechat/b2c07c17-f401-48e1-a287-639ff7b33a1e-4364b8.png)
+![](../static/img/wechat/b2c07c17-f401-48e1-a287-639ff7b33a1e-4364b8.webp)
 
 然后生成后面的sid：
 
-![](../static/img/wechat/7240d106-0a37-4988-b072-5717af310dd0-015a72.png)
+![](../static/img/wechat/7240d106-0a37-4988-b072-5717af310dd0-015a72.webp)
 
 推理时同样没有ground-truth，只能全量参与（感觉这样得到的只能是用户平均兴趣）。
 
 ## 2.3 曝光感知的NTPloss
 
 只对第一层sid的预估值$p^{(1)}$施加一个曝光未点击损失，$c_i=1$表示点击，$1-c_i=1$表示曝光未点击：
-![](../static/img/wechat/82acb269-8205-40b9-88d4-2b53da3bab22-6426b9.png)
+![](../static/img/wechat/82acb269-8205-40b9-88d4-2b53da3bab22-6426b9.webp)
 
 
 
@@ -76,7 +76,7 @@ decoder是GR的核心，是真正的生成模块。判别模型可以将target�
 
 离线效果：
 
-![](../static/img/wechat/0397c5c0-d896-4895-97a7-39822c3ac0ba-73008e.png)
+![](../static/img/wechat/0397c5c0-d896-4895-97a7-39822c3ac0ba-73008e.webp)
 
 在线AB：
-![](../static/img/wechat/e6c7523b-20ef-47a7-9649-70c01f0f9806-d6b5d1.png)
+![](../static/img/wechat/e6c7523b-20ef-47a7-9649-70c01f0f9806-d6b5d1.webp)
