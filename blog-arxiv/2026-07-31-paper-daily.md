@@ -3,234 +3,178 @@ title: "【推荐系统 Paper 日报】2026-07-31"
 date: 2026-07-31
 authors: [wangshuli]
 tags: [推荐系统, Paper日报, arxiv]
-km_source: "https://km.sankuai.com/collabpage/2777579839"
+km_source: "https://km.sankuai.com/collabpage/2777955558"
 ---
 
 # 【推荐系统 Paper 日报】2026-07-31
 
 ## 📊 今日概览
 
-arXiv cs.IR 于 7 月 30 日（周四）更新了 29 篇新论文，其中与推荐系统直接相关的有 28 篇，占比高达 96%，说明本期 cs.IR 几乎成了推荐系统的专场。亮点包括：快手工业界的多目标生成式检索框架、基于未来信息自蒸馏的序列推荐新范式、多模态缺失补全的新框架，以及一篇对 RecSys 复现性进行系统回顾的综述。
+arXiv cs.IR 于 **Fri, 31 Jul 2026** 发布新论文 **26 篇**，其中与推荐系统强相关的论文 **25 篇**，占比高达 **96%**！本期工业界论文非常密集，Meta（Instagram）、Google Discover、腾讯、淘宝等巨头纷纷发布核心工作，同时 LLM-based 推荐与生成式推荐仍是学术热点。推荐阅读 OneShot（Meta 工业检索新架构）、ROCS（Meta 推理效率突破）、HA-MoE（Google 异构排序）和 CCFormer（腾讯生产落地）。
 
 ---
 
 ## 🔥 推荐系统论文深度解读
 
-### 1. WhisperRec: Latent Reasoning for Efficient Foundation Recommendation Models
+### 1. OneShot: Index-in-Ranking with Neural Scoring for Large-Scale Retrieval
 
-📄 [arXiv:2607.26621](https://arxiv.org/abs/2607.26621) | 快手 | Hao Jiang, Peiru Du, Pengfei Yao 等（共 13 位作者，含 Ruiming Tang）
+📄 [arXiv:2607.27475](https://arxiv.org/abs/2607.27475) | Meta/Instagram | Ziwei Li, Shuyao Li, Xufeng Cai et al.
 
-**🗣️ 大白话：** 现在大语言模型（LLM）用来做推荐越来越火，但常见做法是让模型先生成一大段推理过程（Chain-of-Thought），再根据推理结果做推荐——这一步很慢。快手团队说：别生成文字了，直接让模型在"脑子内部"完成推理，把推理过程压缩成几个隐式 token，又快又好。
+**🗣️ 大白话：** 推荐系统的检索和排序长期"各干各的"——检索只管快速捞候选，排序只管精准打分数，两者目标不一致。Meta 这篇工作直接把检索和排序融合成一个端到端框架，用神经网络打分代替传统的向量内积，既保留检索的速度，又获得排序的精度。上线 Instagram 短视频推荐后，召回率提升 20%，效率提升 10 倍。
 
-**🔬 专业讲解：** 现有 Foundation Recommendation Models（FRM）通常采用 Think-then-Answer 范式，即显式生成 CoT 推理链。WhisperRec 提出 Latent-Reason-then-Answer 新范式，将教师 CoT 蒸馏为可学习的隐式推理 token，避免了自回归生成长文本的延迟瓶颈。具体包含三个核心设计：
-- **MV-ACoT（Multi-View Adaptive CoT）**：从用户兴趣的多视角构建高质量监督信号，并根据样本难度自适应调整推理复杂度；
-- **三阶段 Latent Reasoning Alignment**：逐步将教师 CoT 内化到隐式表示中；
-- **Curriculum-based Post-training**：激活隐式 token 的推理能力，同时保留标准推荐能力。
-
-实验在快手工业数据集和 Kuaishou LLM-Rec 公开 benchmark 上进行，WhisperRec 相比显式 CoT Think 变体提升 SID@64 达 17.44%，相比 No-Think 变体提升 9.33%，**在线推理吞吐量提升超过 10 倍**。
+**🔬 专业讲解：** 传统两阶段检索（ANN 索引 + 精排）存在结构性错位：索引学习优化的是表征相似性，而排序优化的是用户行为对齐。OneShot 提出了"in-model index learning"思路，将索引结构与排序目标联合优化。通过神经网络评分（Neural Scoring）突破内积瓶颈，实现了检索阶段的交互建模扩展。工业部署验证了在十亿级候选集上的有效性，同时大幅提升了线上用户日活、互动时长等核心指标。
 
 ---
 
-### 2. Learning from the Future: Privileged Self-Distillation for Sequential Recommendation
+### 2. ROCS: Request-Oriented Compute Sharing for Efficient Large-Scale Recommendation
 
-📄 [arXiv:2607.27055](https://arxiv.org/abs/2607.27055) | 新加坡国立大学 / 阿里巴巴 | Jiakai Tang, Yang Zhang, See-Kiong Ng, Xu Chen, Wen Chen, Jian Wu, Han Zhu
+📄 [arXiv:2607.27744](https://arxiv.org/abs/2607.27744) | Meta | Yuxin Chen, Liang Luo, Buyun Zhang 等 47 位作者
 
-**🗣️ 大白话：** 序列推荐模型训练时通常只用"前面的行为预测下一个"，但日志里其实还有"后面的行为"这些额外信息。这篇论文的做法是：训练时偷偷看未来，但推理时不看——未来信息作为"特权"只用来教模型，不会影响线上部署。
+**🗣️ 大白话：** 推荐模型越来越大了，但推理成本成了瓶颈。Meta 发现推荐推理有个特点：同一个用户的请求要算很多候选物品，但用户侧特征只用算一次。ROCS 就是把这个"算一次"的部分提取出来，让推理效率暴涨。检索模型 QPS 提升 3 倍，排序模型在 QPS 提升 50% 的同时还降低了 0.5% 的 LogLoss。
 
-**🔬 专业讲解：** 现有序列推荐使用因果（前缀-only）目标函数，只能获得下一个 item 的 one-hot 监督，无法刻画非目标 item 的相对偏好。论文提出 Privileged Self-Distillation（PSD），核心设计：
-- 对同一个 backbone 施加两种 attention mask：future-aware view（看完整序列，作为 teacher）和 prefix-only view（只看前缀，作为 student）；
-- 用未来交互构造特权 teacher 分布，通过蒸馏将其转化为训练-only 的监督信号；
-- 引入 **advantage-reachability gate** 过滤与 observed prefix 不兼容的 teacher 信号，配合 momentum-averaged teacher 稳定训练目标；
-- 单阶段端到端优化，**部署模型和推理成本完全不变**。
-
-实验覆盖多个公开 benchmark 和不同 backbone，结果一致提升。
+**🔬 专业讲解：** ROCS 是一种模型和推理架构，核心洞察是 request-candidate 计算的不对称性：request-side 特征在大量 candidates 间共享。通过 Generalized Layer Masking (GLM) 隔离 candidate-dependent 表示，Deep Cross Attention (DCA) 扩展序列架构的 request-oriented sharing，以及 In-Kernel Broadcast Optimization (IKBO) 加速 GPU 部署。该方案已全面部署在 Meta 的推荐系统中，覆盖广告、自然流量、检索和排序阶段。
 
 ---
 
-### 3. Multi-Decoder OneRec: Controllable Generative Retrieval for Multi-Objective Industrial Recommendation
+### 3. Heterogeneous Ranking in Industrial-Scale Recommender Systems: A Case Study
 
-📄 [arXiv:2607.26500](https://arxiv.org/abs/2607.26500) | 快手 | You Wang, Zhao Liu, Guoping Tang, Yiqing Yang, Shuo Su, Jing Liu 等（共 14 位作者，含 Ruiming Tang, Wenwu Ou）
+📄 [arXiv:2607.27577](https://arxiv.org/abs/2607.27577) | **RecSys 2026 Industry Track** | Di Bai, Jintao Liu, Zhenwei Tang et al. (Google)
 
-**🗣️ 大白话：** 工业推荐系统通常给不同目标（点击率、观看时长、分享等）分别建召回通道，通道多了系统越来越碎。这篇论文用生成式检索统一召回，但不是一个 decoder 打天下，而是多 decoder 各司其职又共享底座，每个目标有自己的 LoRA 专家，上线还能控制各目标的配额。
+**🗣️ 大白话：** Google Discover 的推荐流里有文章、长视频、短视频、UGC 等各种内容，每种内容的特征密度和用户互动方式都不一样。用同一个模型打分，很容易出现"视频挤占文章"的 majority bias。Google 提出了 HA-MoE——异构自适应的混合专家架构，让不同内容类型走不同的专家通路，同时用轻量级的 LENS 框架监控专家的专业化程度，避免部署后"专家塌房"。
 
-**🔬 专业讲解：** 工业推荐的多目标召回通常采用 quota-based 多路由设计，导致建模、训练、 serving 的碎片化。语义 ID 生成式检索（如 OneRec）提供了统一替代方案，但单一 decoder 会纠缠不同目标的策略并限制候选互补性。论文提出 Multi-Decoder OneRec：
-- 所有目标共享用户上下文模块和 General Decoder；
-- 每个目标配一个独立的 LoRA 专家，实现参数高效的目标自适应；
-- 训练时通过 exposure-sample NTP、target-filtered NTP 和 KL-regularized policy optimization 分别更新不同部分，梯度路由隔离更新范围；
-- 推理时通过显式 route quotas 分配固定预算，Multi-Decoder Constrained Beam Search 降低跨路由重复。
-
-论文还公开了 **Kwai26** 大规模多目标 benchmark（13.1 亿原始记录，3185 万 Item-ID，2503 万有效 Semantic ID）。实验在 512-item 检索预算下，Recall@512 提升 1.69%-5.62%；生产 A/B 测试中，人均使用时长 +0.37%，7 日留存 +0.19%，新内容冷启动 +2.09%。
+**🔬 专业讲解：** 本文基于 Google Discover 的工业部署，提出了 HA-MoE（Heterogeneity-Adaptive Multi-gated Mixture-of-Experts）架构，将异构上下文显式编码到 gating 网络和 expert 表示中。配套提出 LENS 可观测框架，可追踪专家在连续重训练中的功能异构性。新指标 DL-AUC（Dual-Level AUC）同时衡量全局排序性能和跨段排序正确性。离线和在线 A/B 实验均验证了有效性。
 
 ---
 
-### 4. IMFuse: Instance-Aware Multi-Layer Fusion for LLM-Enhanced Sequential Recommendation
+### 4. CCFormer: Efficient Cross-Field Interaction and Hierarchical Sequence Compression for Industrial Recommendation at Tencent
 
-📄 [arXiv:2607.27002](https://arxiv.org/abs/2607.27002) | 北京交通大学 / 等 | Yuheng Zheng, Yu Cui, Bin Wu, Jian Zhang, Ye Feng, Can Wang
+📄 [arXiv:2607.28070](https://arxiv.org/abs/2607.28070) | Tencent | Yunlong Wang, Huizhe Zhang, Haonan Hu et al.
 
-**🗣️ 大白话：** 用 LLM 做序列推荐时，大家通常只取最后一层 hidden state 作为 item 表示。但这篇论文发现：最后一层容易出现"维度坍缩"（dimensional collapse），中间层反而有更有用的信号。于是他们设计了一个实例感知的融合机制，自动从不同层挑最好的表示。
+**🗣️ 大白话：** 自注意力模型在推荐里越用越大，但工业系统对延迟和资源的限制很严格。腾讯把跨域特征交互和序列压缩塞进一个统一的 Transformer 里，让长序列建模不再烧钱。视频推荐 CTR 提升 3.57%，广告收入提升 1.71%，训练速度还比 HSTU 快了 2.2 倍。
 
-**🔬 专业讲解：** 现有 LLM-based 序列推荐通常依赖 LLM 最终层的 hidden state 编码 item 文本信息。作者通过实证分析发现该做法存在局限性：最终层表示常出现 dimensional collapse，而中间层可能编码了更有用的语义信号。IMFuse 提出实例感知多层融合框架，为每个 item 实例自适应地从 LLM 多层表示中选择和融合最优信号，提升序列推荐的表示质量。
-
----
-
-### 5. CaIRec: Calibrated Modality Imputation for Incomplete Multimodal Recommendation
-
-📄 [arXiv:2607.26720](https://arxiv.org/abs/2607.26720) | 新加坡国立大学 | Ruiyu Liu, Xiaohao Liu, Miaomiao Cai, Yunshan Ma, See-Kiong Ng
-
-**🗣️ 大白话：** 多模态推荐里 item 经常有缺失（比如没图、没文字描述），现有做法是补全缺失的表示，但补出来的东西和已有的模态可能"不对齐"，而且补完也不一定能帮推荐。这篇论文分两阶段解决这个问题：先保证补完的模态之间结构一致，再让补完的表示真正服务于推荐排序。
-
-**🔬 专业讲解：** 现有模态补全方法面临两大挑战：
-- **Cross-modal Structural Distortion**：补全的表示与已有模态之间缺乏跨模态关系约束，导致结构不一致；
-- **Preference Adaptation Gap**：补全信息缺乏排序导向的指导，且模态缺失破坏了偏好传播所需的 item 邻域。
-
-CaIRec 提出两阶段框架：
-- **SIC（Structural Imputation Calibration）**：从可用模态推断共享信息，通过结构正则化和观测模态对的对应监督来校准跨模态组织；
-- **PRC（Preference-oriented Representation Calibration）**：在表示和关系两个层面进行推荐特定的自适应。构建伪缺失实例，将恢复表示与排序监督塑造的观测对应物对齐；构建 completion-aware item 图，整合补全内容关系与协同证据。
+**🔬 专业讲解：** CCFormer 提出 feature-field separated cross attention 结合 long-sequence subspace token mixing，通过分层序列压缩（progressively expanded receptive fields）实现高效长序列建模。在两个公开 benchmark 和腾讯大规模工业数据集上均超越 SOTA，并已在腾讯生产环境全量部署，覆盖视频推荐和广告排序两大场景。
 
 ---
 
-### 6. NMKFR: A Robust Framework for Time-Aware Cold-Start Recommendation
+### 5. From Understanding to Action: Feedback-Grounded Policy Discovery for Generative Recommendation
 
-📄 [arXiv:2607.26429](https://arxiv.org/abs/2607.26429) | 东北大学（中国）| Chengzhi Liu, Ning Zeng, Zehui Qu
+📄 [arXiv:2607.27789](https://arxiv.org/abs/2607.27789) | Zhi Chen, Minmao Wang, Xingchen Liu et al.
 
-**🗣️ 大白话：** 新 item 冷启动本来就难，如果推荐环境还在随时间变化就更麻烦了。这篇论文把语义信息和时序动态结合起来：用 Titans 做语义编码器提取文本信息，用卡尔曼滤波跟踪 item 状态随时间的变化，再根据不确定性信号动态融合两者。
+**🗣️ 大白话：** LLM 能看懂用户历史，但"看懂"不等于"能推荐好"。LLM 的推理可能听起来很有道理，但推荐效果不一定好。这篇工作把 LLM 的"理解"和"行动"拆成两个层面：先理解用户意图，再通过实际推荐反馈来发现最优策略。然后通过知识蒸馏把 LLM 的洞察压缩到轻量级的 Semantic-ID 生成器里，线上 Revenue 提升 4.5%，ADVV 提升 4.6%。
 
-**🔬 专业讲解：** 新 item 冷启动面临稀疏早期交互和时变环境的双重挑战。NMKFR（Neural Memory Kalman Fusion Recommender）将语义分支与时序分支结合：
-- **语义分支**：基于 Titans 的语义编码器从文本中提取 memory-enhanced item 观测；
-- **时序分支**：在 irregular interaction intervals 下估计 latent state；
-- **后验协方差作为不确定性信号**：校准语义记忆检索和自适应静态-时序融合。
-
-实验在 Amazon Video Games 和 MovieLens-32M 上进行，在时感知和 item 冷启动协议下均取得最优结果。
+**🔬 专业讲解：** 提出 Understanding-Action Gap 概念：LLM 的意图知识（intent knowledge）和推荐策略知识（policy knowledge）存在断层。设计反馈驱动的 agent 框架，先诱导任务导向意图，再基于增量效用发现推荐策略。通过 dual-space relational distillation 将意图和策略知识转移到轻量 Semantic-ID 生成器的两个 latent token 中，实现 LLM-free 在线推理。大规模线上 A/B 验证效果显著。
 
 ---
 
-### 7. PSG: Pair-Space Generation for Efficient Generative Reranking
+### 6. LoopMemGR: From Behavior Logs to Evolving Memory for Generative Recommendation
 
-📄 [arXiv:2607.26427](https://arxiv.org/abs/2607.26427) | 清华 / 快手 | Chao Feng, Li Ma, Xiancheng Gao, Chenghao Zhang, Yuanhao Pu, Xiang Li
+📄 [arXiv:2607.27647](https://arxiv.org/abs/2607.27647) | Hui Qian, Changfa Wu, Chang Liu et al. (Taobao/Alibaba)
 
-**🗣️ 大白话：** 生成式重排序（Generative Reranking）用自回归模型一个个位置地生成排序结果，但复杂度随列表长度线性增长，延迟大、探索空间有限。这篇论文提出在"pair 空间"里生成，不再生成完整排序序列，而是生成 item pair 的偏序关系，从根本上降低复杂度。
+**🗣️ 大白话：** 生成式推荐只记用户点了什么，但忘了系统之前给用户推过什么。这导致系统不知道"推了 A 用户没点，下次可能该推 B"。LoopMemGR 让推荐系统也记"推荐日志"——不仅记用户行为，还记系统推荐决策和用户反馈，形成闭环记忆。通过"近因-频率-全局"三个视角提取经验，淘宝数据集上效果显著。
 
-**🔬 专业讲解：** 现代推荐采用 Generator-Evaluator（G-E）范式做列表级重排：Generator 从候选中生成序列，Evaluator 在序列级别打分筛选最优。自回归（AR） backbone 存在两大瓶颈：
-- 复杂度随列表长度线性增长，严格延迟约束下生成列表数量有限，限制探索；
-- 教师强制训练（teacher forcing）导致暴露偏差（exposure bias），训练和推理的分布不一致。
-
-PSG（Pair-Space Generation）提出在 pair 空间进行生成式重排：将排序问题转化为 pair-wise 偏序关系的生成，避免完整序列的自回归生成，显著降低计算复杂度并缓解暴露偏差。
+**🔬 专业讲解：** 提出 closed-loop recommendation experience memory 框架，在传统 behavior log 之外维护 recommendation experience log，记录 past recommendation--feedback trajectories。设计三视角经验提取：recency view（短期动态）、frequency view（重复模式）、global view（跨用户可迁移规律）。将信号压缩为固定数量 experience tokens 约束生成模型。在工业级淘宝数据集上验证了闭环经验积累的有效性。
 
 ---
 
-### 8. DIRECTOR: Dynamic Index-based Recommendation with Transport-Optimized Retrieval
+### 7. Restoring Collaborative Signals in Semantic-ID Generative Recommendation via Personalized Natural Language
 
-📄 [arXiv:2607.26418](https://arxiv.org/abs/2607.26418) | 清华 / 中科大 | Yuanhao Pu, Chenghao Zhang, Chao Feng, Xiang Li, Defu Lian
+📄 [arXiv:2607.27682](https://arxiv.org/abs/2607.27682) | Changjiang Han, Qingyang Li, Yaqiang Zang et al.
 
-**🗣️ 大白话：** 重排序是个组合优化问题，自回归模型贪心地一个个选位置，容易过早剪掉全局最优解。这篇论文把"选哪个 item 放哪个位置"问题转化成最优传输（Optimal Transport）问题，通过动态索引来高效求解。
+**🗣️ 大白话：** Semantic-ID 把物品压缩成短码，但压缩过程中把协同过滤信号弄丢了——代码里只有内容信息，没有"用户 A 和 B 都喜欢这个"的协作信息。这篇工作用自然语言作为桥梁，把协同信号在推理时注入 SID 生成过程，不用改模型也不用重训练，准确率就上去了。
 
-**🔬 专业讲解：** 生成式重排序的主流做法是自回归模型逐个位置构建 slate，以捕获位置间依赖。但在实际贪心或受限宽度的解码下，基于前缀的搜索可能过早剪枝全局有希望的排列，且存在固有的顺序延迟。DIRECTOR 提出基于动态索引的推荐框架，将重排序建模为带约束的最优传输问题：
-- 用 transport-optimized retrieval 替代自回归逐个位置生成；
-- 动态索引结构支持高效的全局优化求解；
-- 突破 AR 模型的顺序依赖和剪枝限制。
+**🔬 专业讲解：** 核心洞察：compact SID 无法同时容纳内容信号和协同信号，两者存在竞争。提出基于个性化自然语言的框架，在推理时为 SID 生成添加分层协同线索，通过可分析的链接恢复缺失的协同信号。不修改 backbone、不重训练 SID，仅通过推理时注入协同信号实现一致的性能提升。
 
 ---
 
-### 9. Reproducibility in Recommender Systems: A Survey
+### 8. Hierarchical Latent Reasoning for LLM-based Recommendation
 
-📄 [arXiv:2607.26074](https://arxiv.org/abs/2607.26074) | ACM TORS（已接收）| Alan Said, Alejandro Bellogin
+📄 [arXiv:2607.27760](https://arxiv.org/abs/2607.27760) | Peiyu Hu, Siying Gu, Weihai Lu et al.
 
-**🗣️ 大白话：** RecSys 从 2020 年开始设了复现性 Track，这篇综述把这 6 年 51 篇复现性论文做了个系统回顾。发现：复现性论文越来越多样化，但用的数据集和算法还是挺集中的；很多所谓"复现"其实是在原实验基础上加了新模型或新指标，严格复现的反而少。
+**🗣️ 大白话：** 让 LLM 做推荐，直接让它"思考"会太慢，但隐式推理又不知道每层在干什么。HiLaR 把推理过程分层：从宏观偏好到微观意图，逐层递进。每层推理贡献多少，用强化学习的 process reward 来优化，让 LLM 推荐又快又准。
 
-**🔬 专业讲解：** 论文对 ACM RecSys Reproducibility Track（2020-2025）的 51 篇接受论文进行结构化分析，三个主要发现：
-- Track 范围从单纯的 reproduction/replication 扩展到 benchmarking、资源和方法论贡献；
-- 复现性论文的方法论画像高度一致，依赖有限的数据集、算法和评估协议；
-- 实践中复现常以扩展而非严格复现的形式出现，频繁引入额外模型或评估标准。
-
-结论：复现性工作提升了透明度和文档化水平，但对方法论多样性的影响有限，凸显了复现性概念定义与实施之间的鸿沟。
+**🔬 专业讲解：** 提出 HiLaR（Hierarchical Latent Reasoning）框架，构建时间引导的分层用户偏好表示，将其与 LLM 的多层隐式推理状态对齐，从 broad preferences 到 fine-grained current intents 组织推理过程。通过 final recommendation feedback 与 layer-aware process rewards（基于每层边际目标似然增益）联合优化推理轨迹。在 Amazon 四个 benchmark 上超越序列、生成式和 LLM-based 基线。
 
 ---
 
-### 10. Kairos: Numerically Robust News Recommendation under Item Cold-Start via Cholesky-based LinUCB
+### 9. Interpretable Representation via LLM-Driven Generative Disentanglement for Local-Life Service Recommendation
 
-📄 [arXiv:2607.26832](https://arxiv.org/abs/2607.26832) | 独立作者 | Finn Hertsch
+📄 [arXiv:2607.27944](https://arxiv.org/abs/2607.27944) | Long Zhang, Hao Jiang, Sheng Yu et al. (Kuaishou)
 
-**🗣️ 大白话：** 新闻推荐里文章生命周期极短（<48 小时），文章池也浅，深度学习模型在这里水土不服。这篇论文回归经典的 LinUCB 上下文 bandit，但用 Cholesky 分解来保证数值稳定性，在冷启动和数据稀疏场景下反而更 robust。
+**🗣️ 大白话：** 本地生活服务推荐（如快手本地生活）中，地理位置、品牌、品类等属性混在一起，压缩成 Semantic-ID 后既看不懂又撞码率高。LGRID 把属性拆开，各自编码再对齐，让 SID 的每一位都有明确含义。快手和 Foursquare 上 AUC 提升 5.44%，粗粒度地理字段解码准确率超 99%。
 
-**🔬 专业讲解：** 区域市场的算法新闻个性化面临结构性 item 冷启动：深度模型需要海量交互数据，而真实新闻 TTL < 48h 且文章池浅。Project Kairos 采用 LinUCB 上下文在线学习来桥接数据稀缺：
-- 用 Cholesky 分解保证数值鲁棒性，避免因协方差矩阵病态导致的数值不稳定；
-- 在线学习机制天然适应新文章的持续流入和快速过期；
-- 无需大规模预训练，部署和维护成本低。
+**🔬 专业讲解：** 提出 Encode -> Disentangle -> Align -> Quantize 流水线。联合 LLM 编码保留跨属性地理-语义依赖；Structured Disentangled Block 将 hidden states 路由到地理和语义属性槽；Synergistic Alignment Learning 使槽既可生成解码又可用于检索判别；Dual-Stream Residual Quantization 分别离散化两流。碰撞率从 97% 降至 39.9%。
 
 ---
 
-### 11. Guess Where You Go: Generative Next Point-of-Interest Recommendation in Amap
+### 10. Hierarchical Reranking for Scalable Financial RAG System
 
-📄 [arXiv:2607.26073](https://arxiv.org/abs/2607.26073) | 阿里巴巴-高德 | Penglong Zhai, Bowen Zheng, Jie Li, Yifang Yuan, Yue Liu, Sicong Wang
+📄 [arXiv:2607.27523](https://arxiv.org/abs/2607.27523) | **IJCAI-ECAI 2026 (FinLLM)** | Joohyun Lee, Sungwoo Hong
 
-**🗣️ 大白话：** 生成式检索（Generative Retrieval）在推荐里越来越流行——直接生成 item ID 来召回。但在工业级 POI 推荐里落地很难，因为地理位置是结构化实体，有空间约束，而且用户移动模式是序列化的。这篇论文分享了高德地图的实践经验。
+**🗣️ 大白话：** 金融文档（年报、财报）又长又杂，RAG 系统经常找不到关键信息。这篇工作设计了一个三阶段金融 RAG：先优化查询，再分层重排序，最后管理长上下文。在多个金融 benchmark 上 NDCG@20 达到 0.79，还拿了 ACM FinanceRAG 挑战赛第二名。
 
-**🔬 专业讲解：** 生成式检索通过生成紧凑 item 标识符来召回，但在工业场景落地面临挑战：冗余或冲突的 token 分配、异构 item 信号融合不足。POI 推荐场景尤其复杂，需要表示结构化空间实体、捕获序列化移动模式、并生成与地理约束一致的预测。论文分享了 Amap（高德）在生成式 next POI 推荐中的工业实践。
-
----
-
-### 12. CaIRec: Calibrated Modality Imputation for Incomplete Multimodal Recommendation
-
-📄 [arXiv:2607.26720](https://arxiv.org/abs/2607.26720) | 新加坡国立大学 | Ruiyu Liu, Xiaohao Liu, Miaomiao Cai, Yunshan Ma, See-Kiong Ng
-
-（已在第 5 条解读，略）
+**🔬 专业讲解：** 三阶段架构：Pre-Retrieval Optimization（归一化、关键词扩展、表格转换）、Hierarchical Reranker Architecture（两阶段排序机制）、Long-Context Management（自适应输入分区和融合）。在 FinQA、FinanceBench、ConvFinQA 上验证，NDCG@20=0.7918，事实一致性显著优于基线。
 
 ---
 
-### 13. ASARL: Autonomous Social-Aware Relevance Learning for QQ Search
+### 11. An Exploration Graph with Continuous Refinement for Efficient Multimedia Retrieval
 
-📄 [arXiv:2607.26593](https://arxiv.org/abs/2607.26593) | 腾讯-QQ | Tao Su, Jinjing Hu, Xiao Wang, Xingzhong Cao, Hui Wang
+📄 [arXiv:2607.27623](https://arxiv.org/abs/2607.27623) | **ICMR 2024** | Nico Hezel, Kai Uwe Barthel, Konstantin Schall et al.
 
-**🗣️ 大白话：** QQ 里的搜索场景和常规搜索不同，query 和标题都很口语化、社区化，大模型虽然语义理解强，但在这种非正式语言面前会水土不服。这篇论文让模型自主学习社交上下文，自己发现问题、自己调整相关性判断。
+**🗣️ 大白话：** 多媒体数据库越来越大，找近邻是个刚需。传统图索引建得慢、占内存。这篇工作提出 crEG（continuous refining Exploration Graph），建图快、搜索准，还能做"探索式搜索"——也就是查询本身就是数据库里已有的元素，这在推荐场景里很常见（"给我找类似这个的"）。
 
-**🔬 专业讲解：** 社交搜索中 query-title 通常以非正式、社区特定的语言表达。LLM 的通用语义理解在社交搜索中受限于上下文差异、数据稀缺和行为驱动动态。ASARL（Autonomous Social-Aware Relevance Learning）提出自主学习框架，让模型在社交环境中自主感知和适应相关性判断。
-
----
-
-### 14. Embedding Items at Scale: Comparing GNN-Based and ID-Based Item Embeddings in the Yandex Ecosystem
-
-📄 [arXiv:2607.26365](https://arxiv.org/abs/2607.26365) | Yandex | Sergei Makeev, Artem Matveev, Vladimir Baikalov, Kirill Khrylchenko
-
-**🗣️ 大白话：** Transformer 序列推荐模型里 item embedding 策略很关键——用预训练的还是端到端学？Yandex 做了大规模工业对比，从成本和质量两个维度评估 GNN-based 预训练 embedding 和 ID-based embedding，给了很实用的选型参考。
-
-**🔬 专业讲解：** Transformer 序列推荐模型依赖 item embedding 策略。现有做法要么用预训练 item embedding，要么和 Transformer 端到端学习。本文首次从成本和质量双视角在大规模工业环境下对比这两种选择，为工业界 item embedding 策略提供实证参考。
+**🔬 专业讲解：** crEG 保证无向图偶数度和全局连通性，特别适用于 exploratory search（查询属于数据库元素）。实验发现 ANNS 上的高效不一定直接对应 exploratory search 上的好性能，揭示了检索与推荐场景的评估差异。
 
 ---
 
-### 15. Beyond Action Imitation: Learning a Decision-Aware User Simulator for Online Advertising
+### 12. Dynamic Exploration Graph: A Novel Approach for Efficient Nearest Neighbor Search in Evolving Multimedia Datasets
 
-📄 [arXiv:2607.26893](https://arxiv.org/abs/2607.26893) | 阿里巴巴 | Zipeng Chen, Jiaer Zheng, Xiangyang Xu, Xinyu Lin, Zhaobin Wang, Zhaohui Liu
+📄 [arXiv:2607.27640](https://arxiv.org/abs/2607.27640) | **MMM 2025** | Nico Hezel, Kai Uwe Barthel, Bruno Schilling et al.
 
-**🗣️ 大白话：** 用 LLM 模拟用户行为来离线评估广告系统，现有做法大多只让模型"模仿"用户点击行为，但用户的真实决策过程比这复杂得多。这篇论文让模拟器学会理解决策过程本身，而不仅仅是模仿表面动作。
+**🗣️ 大白话：** 多媒体数据库不是静态的——新内容不断加入，旧内容不断删除。上一篇 crEG 的扩展版 DEG 支持动态增删数据，删除顶点时保证图不碎，新增数据时自动扩展。不管是流式还是在线场景，都比现有动态图算法更快。
 
-**🔬 专业讲解：** LLM-based 用户模拟器用于推荐和广告系统的离线评估。现有模拟器通常从单域交互历史中推断用户偏好，并主要优化以复现可观测动作（如点击）。这只能捕获用户偏好的局部视图，且纯动作预测容易诱导模型走捷径（shortcut），限制了模拟的保真度和诊断价值。论文提出理解决策过程的用户模拟器，超越动作模仿。
+**🔬 专业讲解：** DEG 核心创新：保证连通性的顶点删除算法 + 数据分布无关的图扩展方法。在 streaming 和 online 场景均优于现有动态图算法，同时保持对静态数据集与 SOTA 相当的表现。
+
+---
+
+### 13. Gradient-free Task-Conditioned Retrieval for On-Device In-Context Learning
+
+📄 [arXiv:2607.27766](https://arxiv.org/abs/2607.27766) | Xinyu Luo, Hui Liu, Yihua Shao et al.
+
+**🗣️ 大白话：** 手机/边缘设备上跑 LLM，检索上下文示例时不能训练模型（算力不够）。CoRA 不用训练，把 frozen encoder 改造成任务相关的检索器：用 ridge regression 对齐表示，低秩压缩索引，离线建索引时只需候选输入输出对，在线查询时只需输入即可。已经在树莓派 5 上跑通了！
+
+**🔬 专业讲解：** CoRA 框架通过 closed-form ridge regression 将候选输入表示对齐到输出导出的条件空间，低秩因子化产生紧凑检索基。在 10 个文本数据集和 4 个多模态 benchmark（Llama-3.2-1B、MobileLLM-Pro 等）上验证，无需 fine-tuning、backpropagation 或目标模型调用。支持端到端树莓派 5 部署。
+
+---
+
+### 14. FiRE: Enhancing MLLMs with Fine-Grained Context Learning for Complex Image Retrieval
+
+📄 [arXiv:2607.27959](https://arxiv.org/abs/2607.27959) | **SIGIR 2025** | Bohan Hou, Haoqiang Lin, Xuemeng Song et al.
+
+**🗣️ 大白话：** 多模态大模型做图像检索，粗粒度理解不够用了。FiRE 提出两阶段细粒度微调：先让模型理解图像的细粒度上下文，再优化检索对齐。还配套了自动构建细粒度图文数据集的方法。五个 benchmark 上零样本检索全面超越现有方法。
+
+**🔬 专业讲解：** 提出自动细粒度多模态五元组数据集构建 pipeline，将微调解耦为两个阶段：fine-grained context reasoning-oriented fine-tuning 和 fine-grained retrieval-oriented fine-tuning。在五个涵盖复杂图像检索任务的数据集上，零样本设置下显著超越现有方法，且 backbone 更轻量。
+
+---
+
+### 15. VIG-RL: Learning to Search and Insert for Verified Image Grounding
+
+📄 [arXiv:2607.28055](https://arxiv.org/abs/2607.28055) | Qinhan Yu, Jun Guang, Chong Chen et al.
+
+**🗣️ 大白话：** AI 回答问题时插入图片，怎么保证图片确实相关且位置合适？现有 RAG 都是静态流水线，VIG-RL 把搜索-选择-插入当成一个强化学习任务，让 agent 自己决定什么时候搜图、插在哪里。用 ReAct 循环 + 复合奖励，效果远超静态基线。
+
+**🔬 专业讲解：** 将 Verified Image Grounding (VIG) 形式化为 active decision-making 过程，在动态 ReAct 循环中通过 RL 优化，复合奖励系统同时评估逐步工具执行和最终多模态对齐。达到新的 SOTA，显著超越现有静态基线。
 
 ---
 
 ## 📋 其他论文速览
 
-- **Improving Item Discoverability in e-Commerce Search via Related Intent Generation**（arXiv:2607.27172，Amazon）：通过意图条件化召回扩展提升电商搜索中的商品可发现性，支持替代、互补和主题相关商品的发现。
-
-- **KAMR: Grounding Generation via Knowledge-Aligned Multi-hop Retrieval**（arXiv:2607.27136，PSU）：知识对齐的多跳检索，解决现有检索器独立排序三元组的问题，通过查询-三元组对齐监督提升知识图谱检索质量。
-
-- **MediaWiki Code2Code Search**（arXiv:2607.26766，Wikimedia）：大规模开源软件实体的神经语义检索系统，索引 129 万结构实体跨越 2500+ 仓库。
-
-- **Continuous Online Evaluation of Recommendation Strategies in Social Science Academic Search**（arXiv:2607.26380，GESIS）：学术搜索引擎中的推荐策略持续在线评估案例研究。
-
-- **FinCacheServe**（arXiv:2607.26076）：面向可变企业文档的 RAG 服务答案复用缓存框架，通过依赖一致性保证保证缓存命中时的答案正确性。
-
-- **GuidedRAG**（arXiv:2607.26071）：在检索前用语义约束缩小检索空间，与传统 RAG 相比引入显式选择阶段和语义引导。
-
-- **SimpleWikiSearch**（arXiv:2607.26070）：为 agentic 搜索评估提供干净的离线 Wikipedia 环境，统一预处理、分块和检索后端。
-
-- **DenseOn with the LateOn**（arXiv:2607.27178，Université de Nantes）：完全开源的稠密和延迟交互检索模型训练方案，覆盖多语言、长上下文和代码搜索。
-
-- **Scientific Knowledge Discovery in the Age of LLMs**（arXiv:2607.26670）：综述了 34 篇将生成式 LLM 应用于文献检索和候选筛选的论文。
-
-- **RAG-HAR+**（arXiv:2607.26631）：面向边缘部署的成本高效 LLM-based 人类活动识别，将 HAR 框架为无训练检索增强任务。
-
-- **A Graph-Native Bitemporal Memory Store for Conversational AI Agents**（arXiv:2607.26520）：基于 Neo4j 的本地图数据库记忆存储，支持双时态数据模型和 HNSW 向量索引。
-
-- **CMT-RAG**（arXiv:2607.26470）：用互补记忆痕迹支持多轮多跳 RAG，将对对话记忆与检索对齐到子问题级别。
-
-- **RAGuard**（arXiv:2607.26339，Purdue）：面向 RAG 系统数据投毒攻击的分层防御框架，第一层对抗微调密集检索器，第二层做后检索验证。
+- **EMBL AI Librarian**（arXiv:2607.28229）：为生命科学 AI agent 升级 Europe PMC 接口，自然语言查询直接返回证据，ScholarQABench 上 Citation F1 提升 16+ 点。
+- **GLM-RAG: Graph Language Models for Graph-Based Retrieval-Augmented Generation**（arXiv:2607.28397）：图语言模型做知识图谱 RAG 检索，在域外泛化上超越 GNN 和向量检索基线，10 页 19 图。
+- **Finding Change in Satellite Archives from Text**（arXiv:2607.28571）：从文本查询卫星图像变化，对比注意力、Mamba 和压缩三种融合策略，两阶段搜索成本降低 10-15 倍。
+- **TCA-SIR: Learning Target-Conditioned Abstractions for Scientific Inspiration Retrieval**（arXiv:2607.28498）：科学灵感检索新思路——学习目标条件抽象表示，ResearchBench 上 HitRate@top4% 提升 10+ 个百分点。
+- **A Structured Knowledge Infrastructure for Domain-Specific Data Asset Discovery**（arXiv:2607.27748）：小红书数据仓库知识图谱，RAG 检索数据资产 Hit@10 从 19.1% 提升到 96.6%。
+- **DS@GT ARC at ImageCLEFmedical 2026**（arXiv:2607.27763）：医学图像检测和描述生成，概念检测 F1 达 0.579，caption 生成排名第三。
+- **Measuring Alignment With Reader Highlights**（arXiv:2607.27739）：评估 LLM 上下文压缩与人类高亮的一致性，控制位置和长度偏差后，GPT-5.4 与单个人类读者表现相当。
+- **Face and Voice Cross-modal Association**（arXiv:2607.28129）：人脸-语音跨模态关联，凸特征嵌入方法在 VoxCeleb 上取得显著改进。
+- **SciSchema.org**（arXiv:2607.27955）：多学科科学过程描述结构化 schema 集合，16 个专家标注 schema，覆盖生物学、化学、物理等领域。
+- **Extended Depth-First Representations of k²-trees**（arXiv:2607.28136）：k²-树的空间优化表示，理论贡献。
