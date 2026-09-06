@@ -6,9 +6,9 @@ tags: [推荐系统, Paper周报, arxiv]
 km_source: "https://km.sankuai.com/collabpage/2784858256"
 ---
 
-# 【推荐系统 Paper 周报】2026 W36（2026-09-01 ~ 09-04）
+# 【推荐系统 Paper 周报】2026 W36（2026-08-31 ~ 09-04）
 
-> 本周 arXiv cs.IR 新论文 107 篇，推荐系统强相关 36 篇。整体来看，**生成式推荐正在从「能不能用」走向「怎么能更好用」**，早期 beam 剪枝、语义稀释、长尾幻觉等工程瓶颈被密集攻克；同时 **LLM 与推荐的融合从「直接当排序器」转向「做推理蒸馏、做查询生成、做归因解释」**，角色定位更务实。工业界快手、Snap 的落地案例也为学术方向提供了验证锚点。
+> 本周 arXiv cs.IR 新论文 140 篇，推荐系统强相关 45 篇。整体来看，**生成式推荐正在从「能不能用」走向「怎么能更好用」**，早期 beam 剪枝、语义稀释、长尾幻觉等工程瓶颈被密集攻克；同时 **LLM 与推荐的融合从「直接当排序器」转向「做推理蒸馏、做查询生成、做归因解释」**，角色定位更务实。工业界快手、Snap 的落地案例也为学术方向提供了验证锚点。
 
 ---
 
@@ -62,7 +62,11 @@ km_source: "https://km.sankuai.com/collabpage/2784858256"
 
 **关键洞察**：LLM 在推荐中的最佳角色可能是 **validated explanation component**——不直接参与排序决策，但为排序结果生成可验证的、基于特征的理由。这与工业界「排序模型 + 解释生成」的架构趋势一致。
 
-**SelfDR + LLM4AIGQ + 归因解释** 三条线合起来，勾勒出 LLM 在推荐系统中的务实定位：**推理时当教师、生成时当助手、解释时当翻译**。
+**SelfDR + LLM4AIGQ + 归因解释 + REPREC** 四条线合起来，勾勒出 LLM 在推荐系统中的务实定位：**推理时当教师、生成时当助手、解释时当翻译、部署时能省则省**。
+
+### 2.4 轻量条件化：冻结 LLM 也能做推荐（补：08-31）
+
+**REPREC**（[REPREC: Representation Driven Parameter-Efficient Recommendation System](https://arxiv.org/abs/2607.24845)）走了极简路线：用冻结的序列编码器生成固定大小用户嵌入，通过一个 MLP injector 把它映射成少量 learned soft tokens，只训练 injector——LLM 和序列编码器全程冻结。更妙的是「短历史训练 + 长历史评估」仍能保留 94–99% 全历史性能，同时获得平均 1.50× 训练加速。这条路线与 SelfDR 的推理蒸馏形成互补：一个蒸馏思考过程，一个冻结 backbone 只训轻量接口。
 
 ---
 
@@ -79,7 +83,6 @@ km_source: "https://km.sankuai.com/collabpage/2784858256"
 **AgentMMRec**（[arXiv:2608.29410](https://arxiv.org/abs/2608.29410)）走得更远：用两个 Agent 协作——Integrator Agent 从训练交互和商品内容中推断用户偏好和商品属性，存入「知识记忆」；Utilizer Agent 消费这些记忆去精修模态图、构建行为感知同构图、重排候选。关键区别在于：生成的知识**先转成图结构和模型表示再做推荐**，不是直接用 LLM 做特征增强或重排。
 
 **对比**：AMUR 是「轻量级的信息论过滤」，AgentMMRec 是「重型的知识工程框架」。两者都试图解决同一个问题——多模态特征与推荐目标的对齐——但路线不同。AMUR 更适合已有系统的轻量化改进，AgentMMRec 适合从零构建多模态推荐系统且愿意承担额外复杂度的场景。
-
 ### 3.3 工业级多模态 I2I：Snap 的实践
 
 **CAMIE**（[arXiv:2608.30255](https://arxiv.org/abs/2608.30255)）来自 Snap 的动态商品广告（DPA）检索系统，已全量上线。用 LLM/MLLM 统一多模态表示，通过用户旅程中挖掘的「共交互商品对」做 fine-tune。效果：线上 CTR +0.390%、CVR +10.832%。这个案例说明**多模态 I2I 在广告场景已经有成熟的工业落地路径**。
@@ -118,9 +121,11 @@ km_source: "https://km.sankuai.com/collabpage/2784858256"
 
 **Edge Spectrum**（[arXiv:2608.29578](https://arxiv.org/abs/2608.29578)）揭示了一个反直觉现象：在 choice-derived item 图中，**强边和弱边编码的是质上不同的关系**——强边集中在被点击商品的 slate 内竞争者上（与排序梯度方向相反），弱边则不是。作者将其形式化为图平滑算子与排序梯度间的符号错配，并证明 co-click 图天然免疫此问题。这为图协同过滤的图构造提供了新的诊断视角。
 
----
+### 5.4 跨城市 POI 推荐的大规模评估（补：08-31）
 
-## 六、本周趋势总结
+**跨城市 POI 推荐实证研究**（[An Empirical Evaluation of Cross-City POI Recommendation on a Large-Scale Benchmark](https://arxiv.org/abs/2608.27840)）基于新发布的大规模 benchmark Trip World 重新评估现有方法，发现三个瓶颈：所谓「家乡感知」模型其实更依赖目的地城市的先验偏好而非真正的偏好迁移；大规模数据下准确率-效率权衡退化，最简单的模型反而最强；语义元数据融合几乎没用。把 next-POI 方法 naive 改编用于跨城市推荐，连 popularity 基线都打不过——凸显了跨城市偏好迁移、语义 grounding 和 unseen destination inventory 可扩展推理需要任务特定设计。
+
+---
 
 | 方向 | 核心趋势 | 代表论文 |
 |------|---------|---------|
