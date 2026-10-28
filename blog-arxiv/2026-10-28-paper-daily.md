@@ -3,158 +3,192 @@ title: "【推荐系统 Paper 日报】2026-10-28"
 date: 2026-10-28
 authors: [wangshuli]
 tags: [推荐系统, Paper日报, arxiv]
-km_source: "https://km.sankuai.com/md/2794306786"
+km_source: "https://km.sankuai.com/md/2795120275"
 ---
 
 # 【推荐系统 Paper 日报】2026-10-28
 
 ## 📊 今日概览
 
-今天是 arXiv cs.IR 的丰收日：2026-10-28 公告共 **47 篇**论文，其中推荐系统及相关方向（含 CTR 预估、个性化检索）多达 **13 篇**，堪称近期最密集的一天。亮点集中在三条线：一是**推荐系统理论反思**——同一个团队一天连发两篇，从"幻影相关性"角度质疑共现相似度的根基；二是**生成式推荐**持续火热，扩散模型、循环深度、语义 ID 各有新打法；三是 **LLM Agent 与推荐的融合**出现了反向输出——把记忆选择建模成推荐问题，很有意思。
+今日 arXiv cs.IR 公告日期为 2026-10-28（周三），共更新 37 篇论文，其中推荐系统相关 19 篇，占比过半。今天的主题非常集中：**生成式推荐（Generative Recommendation）大爆发**——语义 ID、扩散推荐、潜空间推理、蒸馏多目标至少 6 篇都在这条线上；此外工业界贡献扎实，亚马逊、eBay、LinkedIn、淘宝拍立淘都有落地味道很浓的工作。
 
 ## 🔥 推荐系统论文深度解读
 
-### 1. Do Similarity Measures Measure Similarity? How User Activity Creates Phantom Correlation in Recommender Systems
+### 1. RELAY: 一个 Query 扮演两个角色的序列推荐
 
-📄 [arXiv:2610.35765](https://arxiv.org/abs/2610.35765) | 11 pages | Marco Favier, Noah Daniëls, Jens Leysen, Sander Marinus, Bart Goethals
+📄 [arXiv:2610.36000](https://arxiv.org/abs/2610.36000) | 作者：Zesheng Li, Chengchang Pan, Honggang Qi
 
-**🗣️ 大白话：** 协同过滤的祖传假设是"两个人买了同样的东西，说明这两样东西相似"。但这篇论文泼了盆冷水：哪怕每个用户买东西完全随机、毫无偏好可言，只要用户之间买东西的**数量**不一样多，标准的相似度指标照样能算出"强关联"。作者把这种纯由活跃度差异制造的假相关命名为**幻影相关性（phantom correlation）**——你算出来的 item 相似度，可能一大半只是"有人特别能剁手"的副产品。
+**🗣️ 大白话：** 序列推荐要同时看懂两件事——用户"喜欢什么"（语义偏好）和"行为上先买了啥再买了啥"（行为关联）。RELAY 让一个可学习的 query 同时干两份活：先读出语义偏好，再把这份注意力拿去路由历史行为和转移证据，直接打进候选打分里。一个 query，两副面孔。
 
-**🔬 专业讲解：** 作者从最小形式化假设出发，证明独立消费叠加异质活跃度恰好等价于一个 Rasch 模型，并推导出每类相似度度量下关联强度随 item 流行度的依赖关系。将这个理论零假设基线与真实 benchmark 数据集对比，可以量化主流相似度度量（cosine、co-occurrence 等）中有多大比例是幻影成分。这对协同过滤的解读和设计都有实质影响：item 共现不能直接等同于共享偏好，去偏（de-biasing user activity）应当成为相似度计算的前置步骤。理论功底扎实，是那种"返璞归真"式的好工作。
-
----
-
-### 2. Theoretically Sound Item Similarity Measures for Recommender Systems
-
-📄 [arXiv:2610.34402](https://arxiv.org/abs/2610.34402) | Noah Daniëls, Joey De Pauw, Bart Goethals
-
-**🗣️ 大白话：** 还是安特卫普这个团队（Bart Goethals 组今天连发两篇）。 neighborhood-based 协同过滤里用的 item 相似度公式，大多是几十年攒下来的"土办法"——好用，但没人说得清为什么好用。这篇干脆从概率建模和参数估计出发，把相似度设计变成一个有原则的推导过程，顺手挖出了两个被埋没的度量（基于 Bernoulli 和多项分布），还证明了大名鼎鼎的 cosine 相似度其实是某个特定优化问题的解——老江湖第一次拿到了"理论户口"。
-
-**🔬 专业讲解：** 论文的核心贡献是把 item-item 相似度统一到概率视角：对共现矩阵做显式的分布假设与参数估计，而非启发式定义。消融实验系统性地检验了四个关键因素：偏差项（bias）的处理、概率平滑（probabilistic smoothing）、对"未知"共现的正确建模（区别于零共现）、以及分布族的选择。结果表明这些细节对最终相似度质量影响显著，而两个从 Bernoulli/多项分布推导出的新度量在实验中具备竞争力。与上一篇（phantom correlation）互为表里：一篇诊断现有度量的病灶，一篇给出从分布出发的建法，建议连读。
+**🔬 专业讲解：** 核心设计是"一次查询、两种角色"：单个 learned query 既做 semantic readout，又复用其 attention 做 behavioral-memory routing，将 direct-history 与 transition 两条记忆通道送入候选评分；候选条件化的门控（candidate-conditioned gates）为每个候选项动态校准两条通道的权重。训练只用单一目录似然，推理一次前向完成全目录排序。六个数据集全目录实验上，Recall@5 和 NDCG@5 全面领先，相比此前最优平均提升 14.22% / 17.88%；预测器参数仅 2.04M（缩小 65.12%），推理还快 1.75~1.79 倍。工程性价比拉满的一篇。
 
 ---
 
-### 3. Agent Memory as Recommendation: Recommender-System Design for Long-Term Memory of LLM Agents
+### 2. BehaveRec: 长期行为历史到底什么时候才有用？
 
-📄 [arXiv:2610.34673](https://arxiv.org/abs/2610.34673) | 12 pages | Xinyu Zhang, Weiwei Sun
+📄 [arXiv:2610.36239](https://arxiv.org/abs/2610.36239) | 工业界（eBay 团队） | 作者：Aysenur Inan, Reza Yousefi Maragheh 等
 
-**🗣️ 大白话：** 视角反转的神来之笔：现在大家都在用 LLM 帮推荐系统，这篇反着来——用推荐系统的方法去解决 LLM Agent 的长期记忆问题。Agent 跨会话服务用户时，每次请求只能把几条记忆塞进有限的上下文窗口，选哪几条直接决定回答对不对。作者把这个选择形式化成"带预算的 slate 推荐"：请求是用户、存储的记忆是 item、上下文窗口是 slate——推荐系统几十年的老手艺（召回→排序→组 slate）直接搬过来用。
+**🗣️ 大白话：** 大家都默认"历史数据越多推荐越准"，但这篇偏要问：长期历史和社区信号到底什么时候才真的有用？答案很清晰：用户交互少于 10 次时基本没用，历史越丰富增益越大——典型的"剂量-反应"关系。富历史用户的 R@5 提升能到 +0.017。
 
-**🔬 专业讲解：** 在这个形式化下，作者把准确率分解到级联的每个阶段所控制的 completeness（完备性：slate 是否装下了回答所需的全部证据），并据此设计 AgentMemRec：候选生成、learning to rank、slate 构造全流程零 LLM 调用。在 LongMemEval 多会话问题上超过 A-Mem、HippoRAG 2、Mem0、Zep 等一众记忆方法 10~31 个点；在 LoCoMo 上甚至不需要写入口的 LLM 调用。它还能以 3.2 倍低的成本打平每查询 64 次 LLM 调用的 reranker。分解分析显示收益主要来自 slate 更常完整地包含全部证据。对做 Agent 记忆系统的人来说，这篇提供了少见的设计空间统一视角。
-
----
-
-### 4. Cross-Domain Sequential Recommendation with Representation-Level User Transfer
-
-📄 [arXiv:2610.35550](https://arxiv.org/abs/2610.35550) | CIKM'26 Full Paper | Abdulaziz Samra, Nikita Sukhorukov, Alexey Grishanov, Alexey Vasilev, Evgeny Frolov
-
-**🗣️ 大白话：** 跨域序列推荐的落地痛点：一方面各业务方的数据是隔离的（不能把原始行为数据直接拉通），另一方面大量用户根本没有跨域行为。这篇的解法很"工程友好"：跨域只传**用户表示**——用一个轻量 adapter 把源域的用户向量投影到目标域的 embedding 空间，拼进目标域的序列里。用户在源域没数据？模型自动退化为纯目标域序列推荐，毫无压力。
-
-**🔬 专业讲解：** 关键设计是迁移发生在 representation level 而非 data 或 item embedding level，规避了跨域 ID 空间对齐和原始数据合规问题。joint training 使共享用户与未共享用户都能受益：共享用户获得跨域兴趣注入，未共享用户仍享受多域数据共同训练带来的表征质量提升。实验覆盖 benchmark 对比和更贴近工业的可扩展两种 setup，两类用户均有一致增益。CIKM'26 full paper，实用主义路线的优秀范例。
+**🔬 专业讲解：** BehaveRec 是三信号框架：因果 session transformer（短期）+ 双向 User History Encoder（90 天窗口）+ 基于行为 embedding 相似度（而非 item 共现）构建 user-user 图的 GraphSAGE 模块（社区），三者通过可学习 gate 按用户混合。在 1.37 亿序列、1260 万用户的工业数据集上，相比 SASRec 提升 R@5 +3.2%；即使换成参数量更大的 SASRec 基线仍落后 +2.5%，排除了容量解释。用户级分层分析是本文最大亮点，为"何时上长序列建模"提供了直接的决策依据。
 
 ---
 
-### 5. Unified Heterogeneous Feature Interaction via Effective-Rank Scaling for Recommender Systems
+### 3. LESSRec: 语义 ID 推荐，历史 Token 不是都要看
 
-📄 [arXiv:2610.35318](https://arxiv.org/abs/2610.35318) | 9 pages | Ao Zhang, Haochuan Li, Boya Du, Jian Yang, Qihang Fang, Yulin Xu
+📄 [arXiv:2610.37286](https://arxiv.org/abs/2610.37286) | 作者：Shangxin Yang, Zongwei Wang 等
 
-**🗣️ 大白话：** 一篇工业味很浓的排序模型论文。现状是序列特征和行为/上下文特征各用各的模块，信息只能单向流动；硬把所有 token 塞进一个 self-attention 又低效，因为序列和非序列特征的有效秩（effective rank）天然不同。HiRank 用门控序列注意力 + 有效秩缩放把它们统一到一个 backbone 里双向融合，再做场景感知聚合避免多场景负迁移。线上 A/B：**每用户订单量 +2.27%**。
+**🗣️ 大白话：** 语义 ID（Semantic ID）推荐像剥洋葱一样从粗到细自回归生成下一个 item 的 token。这篇做了个推理期分析，发现一个反直觉的事：预测某个 token 时，历史里**同级**的 token 最有用，其他级别的 token 反而会捣乱。那就只看同级的好了。
 
-**🔬 专业讲解：** 技术亮点有三：(1) 有效秩视角为"为什么异质特征不该用同构 attention"提供了量化依据——不同信息密度的 token 混在一起会让高阶交互效率低下；(2) 场景感知聚合把异质低阶 token 压缩成紧凑表示，再通过可学习投影生成场景感知的复合 token，使全局视图信息密度更均匀，高阶 self-attention 才有的放矢；(3) 参数规模上表现出良好的 scaling 行为。对做多场景多任务工业排序的同学，这套"按有效秩组织异质特征交互"的思路值得借鉴。
-
----
-
-### 6. DPE-Rec: Diversity-Preserving and Efficient Diffusion Language Model Recommendation for Bundle Construction
-
-📄 [arXiv:2610.34700](https://arxiv.org/abs/2610.34700) | Pingchuan Ma, Bohan Jiang, Chengshuai Zhao, Dawei Li, Zhen Tan, Huan Liu
-
-**🗣️ 大白话：** 套装（bundle）推荐本质是"补全一个没买完的组合"，天然无序—— diffusion LLM 的双向注意力恰好对无序生成有先验优势。但直接用有两个坑：置信度引导的解码会把"语义分叉"的决策拖到最后，伤害多样性；一步出太多 token 又伤质量。DPE-Rec 用"语义分叉感知的 GRPO"保多样性，用"伪轨迹蒸馏"把学习聚焦到高质量解码实际走过的子空间，换来可靠的多 token 一步解码。结果：推荐性能平均 +63%，快版推理平均快 25.6 倍。
-
-**🔬 专业讲解：** 两个组件的定位很清晰：semantic-fork-aware GRPO 通过自回归 rollout 优先对语义分叉决策给予奖励信号，避免 refinement token 过早约束组合空间；pseudo-trajectory distillation 将随机 corruption 空间的学习压缩到紧凑的轨迹诱导子空间，从而支持多 token 并行揭示而不掉点。这是 diffusion LLM 在推荐场景里第一批认真处理"解码动力学与推荐质量权衡"的工作，对生成式推荐的解码策略研究有参考价值。
+**🔬 专业讲解：** LESSRec 对每个语义级别单独编码历史 token 序列，并在预测目标 token 时将注意力限制在与目标同级的历史序列上；同时补充一条按时间序排列的 item 级语义序列表达整体语义，通过两个独立 cross-attention 分支融合。LESSRec+ 进一步用独立编码器处理不同级别（总参数量不变）。对 RQ-VAE 式生成推荐的注意力设计是个很实用的修正。
 
 ---
 
-### 7. Decision-Native Recommendation with Large Language Models
+### 4. REGER: 把 Item 间关系显式塞进语义 ID 生成推荐
 
-📄 [arXiv:2610.34124](https://arxiv.org/abs/2610.34124) | 12 pages | Daoxuan Liu, Jiayi Liao, Jiancan Wu, An Zhang, Xiang Wang, Xiangnan He
+📄 [arXiv:2610.37584](https://arxiv.org/abs/2610.37584) | 作者：Yuxi Huang, Silin Zhou 等
 
-**🗣️ 大白话：** 生成式推荐的老毛病：LLM 输出的是文本，可能对不上任何一个候选 item、对候选顺序敏感、还不知道自己有多大把握。这篇提出"决策原生推荐"新范式：直接在给定候选上做 item 选择 + 输出校准的置信度。DICE 方法在树结构注意力下一次前向完成所有候选打分（候选乱序结果不变），top-1 准确率超所有 baseline，比生成式方法端到端快约 6 倍，置信度还能用于选择性推荐和按置信度分配算力。
+**🗣️ 大白话：** 生成式推荐的语义 ID token embedding 是随机初始化的，item 之间的语义关系、协同关系全靠模型自己"悟"。REGER 不干了：预训练阶段就显式学"生成语义邻居的 SID"，让模型一开始就懂 item 间的相似和关联。
 
-**🔬 专业讲解：** 技术核心是 Direct Item Choice Estimation：从交互历史学习候选集上的个性化 next-item 分布，配合树结构注意力在孤立候选分支间共享历史计算，实现顺序一致的单次前向打分。三大约束（有效候选选择、重排序一致性、置信度校准）构成了对"决策原生"范式的可验证定义。选择性推荐实验说明校准置信度有实际 downstream 价值（低置信样本离线路由补算）。思路与生成式路线形成互补，可能启发更多"LLM 表征 + 判别式决策头"的工作。
-
----
-
-### 8. CRIM: Composable and Reusable Item Memory for Efficient Personalized Retrieval
-
-📄 [arXiv:2610.35323](https://arxiv.org/abs/2610.35323) | Haolin Li, Haipeng Zhang, Mang Li, Zhaohui Xia, Xun Zhu, Miao Li, Yu Zhang, Ji Wu
-
-**🗣️ 大白话：** 用 LLM 做个性化检索/推荐的隐藏成本：用户历史越长，prompt 越长，同样的 item 文本被反复编码。CRIM 的思路是把"item 语义编码"和"请求级历史建模"解耦：每个 item 用少量可学习 summary token 压成紧凑的连续记忆，**与用户和 query 无关，可以跨请求缓存复用**；推理时按交互顺序拼装缓存记忆即可。配合"少量 item 现场重编码"的联合训练机制，在 MovieLens-1M 等数据集上达到 SOTA 检索效果，同时推理成本显著降低。
-
-**🔬 专业讲解：** 工程价值在于把 KV 侧的重复计算摊销掉：item memory 一次编码、多次组合，request-dependent 的上下文建模只发生在记忆拼装层。REC token 在历史段内引入预测监督，缓解纯缓存导致的表征僵化；cached + sampled live re-encoding 的混合训练让 item/request 两个编码器都能被检索目标持续优化，周期性 cache refresh 维持一致性。新发布的 LazSeq 数据集也值得留意。
+**🔬 专业讲解：** REGER 在三个环节显式注入 item 间关系：① 通过生成式语义检索做语义预训练，学习生成语义邻居的 SID 以继承相似关系；② 历史编码将全局 attention 与按 SID 边界对齐的局部 attention 结合，同时捕捉上下文与相邻 item 的有向转移；③ 理论上给出 SID 前缀树上的层次偏好分解框架，证明精确因子化。对 GR 范式"语义注入不充分"这个老问题给出了系统性方案。
 
 ---
 
-### 9. LoopGR: Parameter-Efficient Scaling for Generative Recommendation via Recurrent Depth
+### 5. The Vocabulary Is Already Here: 预训练可解释特征直接当语义 ID 词表用
 
-📄 [arXiv:2610.34157](https://arxiv.org/abs/2610.34157) | Huizhe Zhang, Yudong Li, Liang Chen, Chengxiang Zhuo, Zang Li
+📄 [arXiv:2610.36763](https://arxiv.org/abs/2610.36763) | 作者：Ziluowen Luo, Ruochen Liu 等
 
-**🗣️ 大白话：** 生成式推荐想吃 scaling 红利，但模型太大、推理太贵都不行。LoopGR 给出第三条路：不加宽不加深"层数"，而是加**循环深度**——共享的生成解码器和轻量上下文更新器交替循环，参数不涨、计算深度涨。推理时用"循环轨迹自蒸馏"从高预算教师蒸馏出低预算学生（对齐预测分布和演化方向）。相比代表性 encoder-decoder baseline，性能更强的同时模型体积最多省 52%。
+**🗣️ 大白话：** 现在生成式推荐都要先给 PLM 表征"量身定做"一个 SID 词表，又费训练又受领域限制。这篇发现：预训练稀疏自编码器（SAE）暴露的特征本来就带人类可读的语义注释，特征索引直接拿来当 SID 词表不就完了？词表都是现成的。
 
-**🔬 专业讲解：** 核心洞察是把"计算深度"从"参数量"中解耦，recurrent depth 成为生成式推荐新的 scaling 维度。分层循环设计中 shared decoder 承载用户-物品交互历史的表达性建模，轻量 context updater 负责逐轮状态更新；蒸馏阶段同时约束预测分布与 hidden state 演化方向（evolution direction），保证低预算推理不偏离高预算的迭代动力学。对推理成本敏感的工业生成式推荐系统，这是一条务实的扩容路径。
-
----
-
-### 10. MIDA: Multi-Interest Decoding with Adaptive Aggregation for Session-based Recommendation
-
-📄 [arXiv:2610.34192](https://arxiv.org/abs/2610.34192) | IEEE TKDE | Linjiang Guo, Nitin Bisht, Shiqing Wu, Guandong Xu
-
-**🗣️ 大白话：** 有个反直觉的观察：会话推荐模型在历史更长时反而表现变差——解码器太偏心最近的 item，远处的语义相关交互被浪费了。MIDA 作为轻量的编码器无关框架，在解码端做两件事：在**原始 item embedding** 上做可微多兴趣聚类（不让编码器的偏好扭曲语义结构），再用一个由平均聚类大小条件化的门控融合"稳定性/可塑性"两条分支。多个 benchmark 上稳定超越 SOTA。
-
-**🔬 专业讲解：** 设计哲学是 two-space decoupling：聚类语义结构保留在 raw embedding 空间（编码器学到的关系偏置会污染聚类几何），序列上下文信息则保留在 encoder 输出空间用于聚合。gate 以 average cluster size 为条件，让聚类结构直接决定聚合行为，形成跨阶段的结构耦合。这个解耦思路对所有"先表征后聚类/检索"的多兴趣方法都有普适参考价值。
+**🔬 专业讲解：** 提出 API 框架：PIDs（Pretrained Interpretable IDs）保留选定的特征索引及其相对激活强度用于区分 item；以 PIDs 为监督，Semantic Prediction Adapter（SPA）从交互历史学习用户偏好。挑战在于紧凑 token 预算下保持 item 区分度、让模型偏好目标 item 而非共享主导特征的候选，以及把可解释性从 item 内容扩展到检索决策本身。免词表训练 + 天然可解释，方向很有想象力。
 
 ---
 
-### 11. Towards a Unified Framework of Optimal Input-Side Dimensional Configuration for Deep CTR Prediction
+### 6. Refiner: 生成式推荐的"慢思考"排序（CIKM 2026）
 
-📄 [arXiv:2610.35695](https://arxiv.org/abs/2610.35695) | 13 pages | Chaohua Yang, Fuyuan Lyu, Xing Tang, Dugang Liu, Xiuqiang He, Zhong Ming
+📄 [arXiv:2610.36890](https://arxiv.org/abs/2610.36890) | 会议：CIKM 2026 | 作者：Haihan Shi, Ruidong Han, Wenjie Wang, Fuli Feng, Xiangnan He 等（中科大 & 工业界）
 
-**🗣️ 大白话：** CTR 模型的性能不只取决于特征交互结构，还取决于交互之前"输入侧怎么配"——选哪些样本、哪些特征、哪些 embedding 单元。以往工作都是在这三个维度上各选各的，互相不知道对方的存在。OptIDC 把样本/特征/embedding 单元三个层级的选择统一到一个框架里联合学习，再用 selection-weighted Optimal Transport 对齐粗细粒度的选择决策，避免跨层级"打架"。模型无关，四个数据集上 AUC 稳定更高。
+**🗣️ 大白话：** 生成式推荐做排序时基本是"一次出答案"的快思考。但排序要对多个候选精细打分，多花点推理时间能不能更准？受 LLM CoT 启发，Refiner 把"推理"搬进潜空间——不生成文字，而是逐步在 latent 空间修正候选分数。
 
-**🔬 专业讲解：** 方法论上，论文观察到三个输入维度的选择机制共享同一基本形式，独立优化忽略了跨层依赖。OptIDC 的关键创新是选择加权 OT 机制：通过有限测度上的传输对齐粗粒度（样本级）与细粒度（embedding 单元级）选择，显式缓解跨层级冲突同时保留各层级语义。作为 model-agnostic 插件可接入现有 CTR 模型，工程接入成本低。
-
----
-
-### 12. Discovering Topics from Linear Autoencoders
-
-📄 [arXiv:2610.34739](https://arxiv.org/abs/2610.34739) | 12 pages | Jutiyakhun Srisoparp, Donlapark Ponnoprat
-
-**🗣️ 大白话：** 线性推荐器和主题模型都在偷偷学"共现"，但很少有人研究这两家人是什么关系。这篇证明：在隐因子模型假设下，闭式解线性自编码器的权重矩阵里就藏着主题——不用额外训练，直接从训练好的推荐器里"白嫖"出可解释的主题，用来解释推荐结果。还提出了新的 item/user 归一化，防止热门 item 和超活跃用户霸占主题。六个数据集上主题质量超过所有专门的主题模型。
-
-**🔬 专业讲解：** 理论贡献是建立了线性推荐器（closed-form linear autoencoder）与 LDA 类主题模型的显式联系：共现结构下的隐因子等价于自编码器权重矩阵的特定分解。归一化设计针对流行度偏置（popular items / very active users dominating topics），与今天同一批次的 phantom correlation 论文形成呼应——活跃度/流行度偏差是本周理论线的共同敌人。推荐性能与调参后的最佳线性推荐器持平，属于"免费可解释性"的高性价比工作。
+**🔬 专业讲解：** 提出 latent residual reasoning 框架，配参数高效微调，核心是让 successive reasoning steps 对细粒度候选分数产生增量改进（residual refinement），区别于以往一次性预测或纯文本空间的显式推理。对非文本的 ID-based 工业排序模型更友好，是把 test-time compute / System 2 思路引入 GR 排序的代表工作。
 
 ---
 
-### 13. How Much Fresh Data Should CTR Recalibration Use? A Temporal Evaluation of Post-hoc Calibration
+### 7. KL-MOPD: 生成式推荐的多目标在线蒸馏，给每个 Token 配不同老师
 
-📄 [arXiv:2610.33168](https://arxiv.org/abs/2610.33168) | 10 pages | Rui Liu
+📄 [arXiv:2610.36973](https://arxiv.org/abs/2610.36973) | 作者：Weiqin Yang, Yandong Wang, Yuan Gao 等
 
-**🗣️ 大白话：** CTR 模型上线后，下游系统消费的是校准过的概率，但校准器的评估却还在用随机切分——这在时间序列场景是自欺欺人。这篇在 Avazu 4000 万曝光上做了非常严谨的滚动时间实验，结论出乎意料：**校准器不是数据越新鲜越好**——6 小时的切片在约三分之一的场景反而让校准变差，12 小时的切片把伤害从 13-17 例降到 3-5 例，且把 12 小时切片降采样到 1 小时的数据量（拟合快 20-25 倍）仍能保留 88% 的收益。别再迷信"最新鲜的数据"了。
+**🗣️ 大白话：** 真实推荐要同时兼顾点击和转化。生成式推荐里一个 item 要每一步 token 都选对才能被召回，传统 item 级的多目标方法太粗了。KL-MOPD 让两个单目标老师在每个 token 上教学生——但发现有的 token 老师甲好教、有的老师乙好教，于是按 token 动态分配"教学权重"。
 
-**🔬 专业讲解：** 实验设计是本文最大亮点：两个滚动时间 origin + 随机切分对照，三种子，Platt scaling 和 isotonic regression 双校准器，逐测试天重拟合。关键发现：(1) 随机切分会把 LR 的 ECE 低估到时间切分的 55-62%，且 ECE 不随时间距离单调；(2) 存在最优切片宽度而非单调收益，印象量本身不能解释宽切片优势（降采样实验证明）；(3) slice-ECE 门控跨 origin 无泛化收益，模拟拍卖中校准对利润的影响仅 -0.21%~+0.26%。对工业校准管道的 fitting 窗口选择给出了直接的实证指引。
+**🔬 专业讲解：** 发现 vanilla 多目标 on-policy distillation（MOPD）存在 token 级不均衡与跨 token 不一致：各老师在每步的蒸馏难度不等且最难老师随 token 变化。KL-MOPD 按 token 级 KL 散度成比例分配教师权重，动态适配每步的蒸馏难度，从而同时改善两个目标的正样本召回。对工业 GR 多目标协调是个轻量即插即用的方案。
+
+---
+
+### 8. AutoRSE: 让 LLM Agent 当推荐算法工程师，到底行不行？
+
+📄 [arXiv:2610.37228](https://arxiv.org/abs/2610.37228) | 作者：Rui Tian, Yi Fang, Wenjie Wang, Fuli Feng 等
+
+**🗣️ 大白话：** 用 LLM Agent 自主改进推荐算法（RSE-Agent）很火，但没人系统评估过它们到底几斤几两。这篇做了大规模实测：3 个前沿 LLM × 3 种 agent 框架 × 6 个工业级任务。结论一半惊喜一半泼冷水：平均提升 16.1% 是真的，但增益主要靠调参、训练策略和模型集成——真正的算法创新几乎没有。
+
+**🔬 专业讲解：** 提出 AutoRSE 评估框架，覆盖六个代表性工业任务，并进行 trajectory 级分析。结论指出当前 RSE-Agents 本质是"工程优化器"而非"算法改进者"：收益集中在超参调优、训练策略与 ensemble，而推荐系统的重大跃迁往往来自算法创新（如 BPR、SASRec 这类），Agent 尚难企及。为这条赛道提供了第一份系统性的基准与清醒剂。
+
+---
+
+### 9. MAGE: 多模态推荐里的"相似性孤岛"问题（NeurIPS 2026）
+
+📄 [arXiv:2610.37409](https://arxiv.org/abs/2610.37409) | 会议：NeurIPS 2026 | 作者：Zhenye Yang, Jinpeng Chen 等
+
+**🗣️ 大白话：** 多模态推荐靠相似性建图传播，但有个隐患：图里"相似的商品"（竞品替代品）抱团，而"互补的商品"（手机和手机壳）在几何上老死不相往来，形成一个个"相似性孤岛"。MAGE 把互补信号补回去。
+
+**🔬 专业讲解：** 将互补性建模解耦为离线几何形变 + 在线拓扑传播：离线阶段用 Soft Conceptor 提取互补感知的残差方向，在局部 gap-preserving 约束下注入 item 表征（吸收共同购买证据同时控制几何扰动幅度）；在线阶段用非对称双流 GNN，视觉特征当稳定锚点、增广后的文本特征当灵活探针，经自校准跨模态机制融合。个性化多模态排序上显著超越基线。
+
+---
+
+### 10. TRIP: CTR 模型的位置编码，可能一直都用错了
+
+📄 [arXiv:2610.37140](https://arxiv.org/abs/2610.37140) | 作者：Xinxun Zhang, Yuxiang Wang 等
+
+**🗣️ 大白话：** 现在的 Transformer CTR 模型都在用索引式或时间式位置编码，但实验发现一个尴尬的事实：大多数现成的位置编码还不如"啥都不加"（NoPE）！这逼着作者重新思考 CTR 到底需要什么样的位置信息。
+
+**🔬 专业讲解：** 提出 TRIP：① Factorized Rank Encoding 用低秩分解表达行为在序列中的序数位置；② Target-Relative Time Encoding 以粗到细刻度刻画行为与目标的时间距离；③ Temporal Group-Causal Interaction 在目标相对的时间组内放松因果约束、组间保持因果，组内做富交互。结论清晰：位置表征应锚定在"序列上下文 + 与当前目标的时间关系"这一组合上。对 CTR 行为序列建模的基础组件是一次认真的 rethinking。
+
+---
+
+### 11. PailitaoMMSearch2.0: 淘宝拍立淘的统一端到端多模态搜索技术报告
+
+📄 [arXiv:2610.36958](https://arxiv.org/abs/2610.36958) | 工业界（阿里巴巴拍立淘） | 作者：Xiaohan Ye, Zihan Gong 等
+
+**🗣️ 大白话：** 工业界的生成式检索模型通常一个场景一个模型、绑死固定的 query 形式。拍立淘 2.0 想做一个统一模型：从原始图片+自由文本指令直接生成商品的语义 ID，覆盖异构购物意图和不同资源约束的线上场景。
+
+**🔬 专业讲解：** 沿三个维度扩展：① 数据规模化——可复用工具集组合成意图/生命周期特定工作流（冷启动合成、质量控制、真实流量精炼、持续生产）；② 意图规模化——通过 CPT → 混合预算 SFT → 统一 RL 逐步赋予一个模型电商知识、多种检索关系和可调推理预算，RL 阶段对齐不同场景的资源约束；③ 端到端从原始 query 图像生成 Semantic ID，省去传统级联管线。生成式检索在头部电商大规模落地的宝贵一手材料。
+
+---
+
+### 12. COMPOTE & DARTS: 扩散/多假设推荐的"多样性崩塌"急救包
+
+📄 [arXiv:37005 COMPOTE](https://arxiv.org/abs/2610.37005) | [arXiv:36954 DARTS](https://arxiv.org/abs/2610.36954) | 作者：Louis Castres Saint Martin 等（ISIR, Sorbonne）
+
+**🗣️ 大白话：** 同一组作者连发两篇，指向同一个问题：用户的下一步本来有多种合理选择，但标准序列推荐把它压成一个确定性预测；扩散推荐能采样多种可能，却严重"采样崩塌"——采多少次输出都几乎一样。
+
+**🔬 专业讲解：** DARTS 诊断出两个促发崩塌的设计：latent 空间与 denoiser 联合训练、trajectory 内的离散损失监督。解法是三阶段解耦：先学习并冻结 latent 空间，再做扩散训练，最后才做离散排序监督，推理时用 posterior-predictive 聚合利用采样多样性。COMPOTE 则从多假设角度切入：用退火目标（均匀监督 → winner-takes-all）训练多假设 transformer，理论上证明最优解按最大熵量化原则划分条件分布、混合分数保持贝叶斯最优排序，泛化界随假设数仅对数增长。两篇在 Amazon Reviews 2023 上都超过 ID-based 与多兴趣基线。
+
+---
+
+### 13. DuTri: 多模态 + 多场景推荐，协同信息和多模态信息该分开管
+
+📄 [arXiv:2610.36836](https://arxiv.org/abs/2610.36836) | 作者：Jintao Huang, Chaohua Yang 等
+
+**🗣️ 大白话：** 多场景推荐加多模态信息时，大家都把图文特征当普通输入特征塞进参数共享架构。这篇做了对照实验：直接这么干并不是最优解。协同信息和多模态信息脾气不同，得分开建模。
+
+**🔬 专业讲解：** DuTri 双分支框架：协同分支通过 user-scenario-item 交互张量的 CP 分解 + 残差量化学习结构化协同偏好表征，捕捉跨场景共性与差异；多模态分支单独处理文本/视觉语义。三分量因子化（Triadic Factorization）显式建模场景维度。对"多场景 × 多模态"这个工业热点组合给出了更合理的建模范式。
+
+---
+
+### 14. 跨天 Item Embedding 兼容性：每天训的向量，第二天还能用吗？
+
+📄 [arXiv:2610.36408](https://arxiv.org/abs/2610.36408) | 作者：Yicheng Wang
+
+**🗣️ 大白话：** 工业上常见做法：每天用前一天行为训 item co-occurrence embedding，第二天拿去喂 CTR 模型。但多天训练数据里混着"同一商品不同版本"的向量，方向和模长都可能对不上。这篇用 48 种配置系统研究了这个被忽视的工程问题。
+
+**🔬 专业讲解：** 对比 Word2Vec 与 item-graph XSimGCL 改造，覆盖初始化、继承、后处理、训练约束和下游增广。三个发现：① ID 初始化与正交对齐分别让 cosine 提升 51.2%/93.4%、GAUC 提升 2.2%/2.6%——检索与几何指标并不能替代下游 CTR 评估；② 热启动虽强但模长持续膨胀（8 天后比基线高 102.5%），每日全局重缩放可控制在 8.2% 且取得最高 GAUC 增益 +4.0%；③ 降维学习下游 CTR 的细节在文中完整消融。天天在工业界发生却很少有人认真量化的问题，实用价值高。
+
+---
+
+### 15. LXR 反事实解释的复现研究：换个任务还灵吗？
+
+📄 [arXiv:2610.36208](https://arxiv.org/abs/2610.36208) | 作者：Meysam Varasteh, Robin Burke 等
+
+**🗣️ 大白话：** LXR 是个经典的反事实推荐解释方法：找出"如果用户评分变了，Top1 就不再被推荐"的最小扰动。这篇复现并扩展：对非 Top1 的 item 做解释也有效；但意外发现某些任务下"热门度"或"隐因子相似度"这种朴素基线居然出奇地好。
+
+**🔬 专业讲解：** 扩展维度包括：非最高推荐项的解释、item 流行度影响（解释冷门 item 时 LXR 扰动更短、质量更好）、以及暴力搜索扰动空间下界来校准 LXR 与其他方法的最优扰动规模。解释性推荐方向少见的严谨复现工作，给后续方法提供了公平的参照系。
+
+---
+
+### 16. MAREval: 用多 Agent 框架评估推荐解释文本的质量
+
+📄 [arXiv:2610.36389](https://arxiv.org/abs/2610.36389) | 工业界（eBay 团队） | 作者：Reza Yousefi Maragheh 等
+
+**🗣️ 大白话：** 推荐系统的自然语言解释质量怎么评？人评贵得离谱，单 Agent LLM 评又对 prompt 敏感、输出不稳定。MAREval 搞了个"辩论式"多 Agent 评审团：规划者辩论定方案、主持人防跑偏、仲裁者汇总多轮+蒙特卡洛采样。
+
+**🔬 专业讲解：** 核心是 Chain of Debate（CoD）prompting 策略驱动 planner agent 协调角色并强制逻辑一致；moderator 抑制 prompt drift；arbitrator 聚合多轮评估 + Monte Carlo 采样提升与人类判断的对齐。在公开（TopicalChat）与工业推荐数据集上超过 SOTA 基线。推荐解释评估自动化的一条可行工程路线。
 
 ---
 
 ## 📋 其他论文速览
 
-- **ACARE: Agent-Context-Aware Reranker for Iterative Search**（arXiv:2610.35840）：为迭代式搜索设计的 Agent 上下文感知重排器。
-- **SLIDE: Search-to-List Item Distillation for Single-Rollout Generative Retrieval**（arXiv:2610.34764）：搜索到列表的 item 蒸馏，单次 rollout 完成生成式检索。
-- **Octen-WebGR: Scaling Generative Retrieval to 200 Million Web Pages**（arXiv:2610.35256）：把生成式检索 scale 到 2 亿网页的工程实践。
-- **PinGER: Token-Efficient Generative Retrieval with Semantic IDs**（arXiv:2610.33435）：基于语义 ID 的 token 高效生成式检索。
-- **LoopGR 之外的生成式推荐补充——CRIM 已解读**：个性化检索的记忆复用思路与语义 ID 检索殊途同归。
-- **SkillQR: Agentic Skill Discovery for Reason-Intensive Query Rewriting**（arXiv:2610.33768）：面向推理密集型 query 改写的 Agent 技能发现。
-- **CA-HNM: Constraint-Aware Hard Negative Mining for Dense Retrieval**（arXiv:2610.35045）：用结构化领域模型约束的难负例挖掘。
-- **Useful Diversity or Hallucinated Variety? Persona-Conditioned Synthetic Query Generation for E-Commerce Search**（arXiv:2610.35102）：追问电商搜索合成 query 的多样性是真多样还是幻觉。
-- **When Fusion Order Matters: Insights on Progressive Multimodal Representation Learning for Cross-modal Retrieval**（arXiv:2610.35125）：跨模态检索中渐进式融合顺序的影响分析。
-- **Hallucination-Aware Multi-Agent RAG via Internal Attention Rewards**（arXiv:2610.35056）：用内部注意力奖励做幻觉感知的多 Agent RAG。
-- **Reinforcement Learning for Controller Parameters in the Auto-Bidding System at Pinterest**（arXiv:2610.33248）：Pinterest 自动出价系统的控制器参数强化学习，广告工程向。
-- **Lessons from Luck: Do LLM-Written Lessons Carry Chance into an Agent's Next Decision?**（arXiv:2610.33029）：追问 Agent 自我反思笔记里的"运气"会不会污染后续决策。
+- **Preserving rare-item recall under a storage budget**（[arXiv:2610.36267](https://arxiv.org/abs/2610.36267)）：固定 embedding 存储预算下，300 维教师做 4-bit 低秩分解（仅 13% 存储）保住 95-103% 尾部召回，完胜 40 维全精度和蒸馏学生——长尾 item 召回的省钱秘籍。
+- **Cross-Day Compatibility**（[arXiv:2610.36408](https://arxiv.org/abs/2610.36408)）：见上方深度解读 14（此处归入 CTR 工程线）。
+- **QESChunker**（[arXiv:2610.36557](https://arxiv.org/abs/2610.36557)）：单一目标统一重叠/非重叠分块，服务 RAG 检索质量。
+- **TaskBridge: SIGIR 2026 eCommerce Challenge 技术报告**（[arXiv:2610.37231](https://arxiv.org/abs/2610.37231)）：SIGIR 电商挑战赛的技术总结，可关注比赛任务设计。
+- **SpectRAG**（[arXiv:2610.36991](https://arxiv.org/abs/2610.36991)）：加权 chunk 图做 token 预算下的多跳 RAG 上下文选择。
+- **Do We Need an LLM to Know Why Sources Conflict?**（[arXiv:2610.36915](https://arxiv.org/abs/2610.36915)）：RAG 知识冲突分型用小决策模型即可，不必都上 LLM。
+- **Tessera**（[arXiv:2610.37080](https://arxiv.org/abs/2610.37080)）：结构补全的证据单元，改进 Web RAG 检索。
+- **Coverage Under Contradiction**（[arXiv:2610.37162](https://arxiv.org/abs/2610.37162)）：否定感知检索基准，测检索器在"否定表述"下的覆盖率。
+- **Lossless Compression of Proximity Graph Indexes**（[arXiv:2610.37176](https://arxiv.org/abs/2610.37176)）：近邻图索引无损压缩，向量检索基建降本。
+- **When Is Additional Retrieval Worthwhile?**（[arXiv:2610.37358](https://arxiv.org/abs/2610.37358)）：成本感知研究"多检索一轮值不值"，量化证据增益与答案可靠性的边际。
+- **When Connectivity Misleads**（[arXiv:2610.36134](https://arxiv.org/abs/2610.36134)）：用对比证据路径引导 Agentic Search，避免连通性误导。
+- **Governed Sovereign RAG**（[arXiv:2610.36561](https://arxiv.org/abs/2610.36561)）：公共行政场景的治理型 RAG，三方认识论路由 + facet 引导澄清。
+- **Modeling Preference Dependencies with DAGs (PDG-F)**（[arXiv:2610.37280](https://arxiv.org/abs/2610.37280)）：叙事式推荐用有向无环图表达偏好间的修饰与条件关系，沿拓扑路径检索排序，超 LLM 基线。
+- **Can Complementary Signals Bridge Similarity Islands? (MAGE)**（[arXiv:2610.37409](https://arxiv.org/abs/2610.37409)）：见上方深度解读 9。
+- **LCM-Promo**（[arXiv:2610.37570](https://arxiv.org/abs/2610.37570)）：LLM 驱动的 uplift 模型做促销分配，营销与推荐交叉。
+- **GradCO**（[arXiv:2610.37267](https://arxiv.org/abs/2610.37267)）：行为感知的梯度冲突卸载，用于文本行人异常搜索（ReID 相邻方向）。
